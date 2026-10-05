@@ -1,26 +1,86 @@
 @import "tailwindcss";
+@plugin "tailwindcss-animate";
 
+/*
+  Brand repaint: white + gold, matching the City Builders mark.
+  Token names kept stable (midnight/dusk/paper/steel/gold/violet) so every
+  component that references them repaints automatically — only the raw
+  hex values below changed.
+*/
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --midnight: #faf7f0; /* page background — warm ivory, not stark white */
+  --dusk: #f3ecdc; /* alt section background — soft cream */
+  --dusk-2: #ece1c7; /* deeper cream panel */
+  --violet: #352a1e; /* secondary dark accent (replaces old violet hue) */
+  --gold: #b8862e; /* brand gold — fills, buttons, line art */
+  --gold-soft: #d4a94f; /* lighter gold — hover on gold fills */
+  --gold-text: #8a631c; /* darker bronze — AA-safe gold for body text/links */
+  --paper: #2a2420; /* primary text — warm charcoal, never pure black */
+  --paper-dim: #6b6256; /* secondary/muted text */
+  --steel: #e2d8c3; /* borders, dividers — light warm line */
+  --ink: #1d1813; /* near-black, used only for text on gold fills */
+
+  --background: var(--midnight);
+  --foreground: var(--paper);
 }
 
 @theme inline {
+  --color-midnight: var(--midnight);
+  --color-dusk: var(--dusk);
+  --color-dusk-2: var(--dusk-2);
+  --color-violet: var(--violet);
+  --color-gold: var(--gold);
+  --color-gold-soft: var(--gold-soft);
+  --color-gold-text: var(--gold-text);
+  --color-paper: var(--paper);
+  --color-paper-dim: var(--paper-dim);
+  --color-steel: var(--steel);
+  --color-ink: var(--ink);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --font-display: var(--font-fraunces);
+  --font-sans: var(--font-inter);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+}
+
+::selection {
+  background: var(--gold);
+  color: var(--ink);
+}
+
+:focus-visible {
+  outline: 2px solid var(--gold-text);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+.skyline-draw path {
+  stroke-dasharray: 2400;
+  stroke-dashoffset: 2400;
+  animation: draw-skyline 2.4s ease-out forwards;
+}
+
+@keyframes draw-skyline {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.prose-sermon {
+  max-width: 68ch;
 }
