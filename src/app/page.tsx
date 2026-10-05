@@ -58,7 +58,16 @@ export default async function HomePage() {
     <>
       {/* Hero */}
       <section className="relative overflow-hidden">
-        <div className="mx-auto max-w-6xl px-6 pt-16 pb-10 sm:pt-24">
+        <Image
+          src="/images/hero-design-export.png"
+          alt=""
+          width={2400}
+          height={1371}
+          priority
+          aria-hidden="true"
+          className="pointer-events-none absolute -right-16 -top-10 hidden w-[640px] opacity-80 sm:block lg:w-[760px]"
+        />
+        <div className="relative mx-auto max-w-6xl px-6 pt-16 pb-10 sm:pt-24">
           <p className="text-sm text-paper-dim">The City Builders · Pastor Michael Tomiwa</p>
           <h1 className="mt-6 max-w-3xl font-display text-[2.75rem] leading-[1.05] text-paper sm:text-6xl">
             A city whose builder and maker is God.
