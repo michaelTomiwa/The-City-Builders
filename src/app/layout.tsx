@@ -4,6 +4,7 @@ import "./globals.css";
 import { SiteHeader } from "@/components/site/site-header";
 import { SiteFooter } from "@/components/site/site-footer";
 import { MotionProvider } from "@/components/site/motion-provider";
+import { supabase } from "@/lib/supabase";
 
 const fraunces = Fraunces({
   variable: "--font-fraunces",
@@ -22,7 +23,23 @@ export const metadata: Metadata = {
     "The City Builders — a faith-based ministry nurturing spiritual growth, discerning divine seasons, and building a people whose builder and maker is God. Led by Pastor Michael Tomiwa.",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+async function getNavPages() {
+  const { data } = await supabase
+    .from("pages")
+    .select("title, slug, nav_label, nav_order")
+    .eq("published", true)
+    .not("nav_label", "is", null)
+    .order("nav_order", { ascending: true });
+
+  return (data ?? []).map((p) => ({
+    href: `/p/${p.slug}`,
+    label: p.nav_label as string,
+  }));
+}
+
+export default async function RootLayout({ children }: LayoutProps<"/">) {
+  const navPages = await getNavPages();
+
   return (
     <html
       lang="en"
@@ -30,7 +47,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     >
       <body className="min-h-full flex flex-col bg-midnight text-paper">
         <MotionProvider>
-          <SiteHeader />
+          <SiteHeader extraLinks={navPages} />
           <main className="flex-1">{children}</main>
           <SiteFooter />
         </MotionProvider>

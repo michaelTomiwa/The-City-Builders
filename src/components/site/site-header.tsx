@@ -6,7 +6,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { LogoMark } from "./logo-mark";
 
-const links = [
+const baseLinks = [
   { href: "/sermons", label: "The watch" },
   { href: "/blog", label: "Blog" },
   { href: "/events", label: "Gatherings" },
@@ -15,8 +15,13 @@ const links = [
   { href: "/about", label: "About" },
 ];
 
-export function SiteHeader() {
+export function SiteHeader({
+  extraLinks = [],
+}: {
+  extraLinks?: { href: string; label: string }[];
+}) {
   const [open, setOpen] = useState(false);
+  const links = [...baseLinks, ...extraLinks];
 
   return (
     <header className="sticky top-0 z-40 border-b border-steel/60 bg-midnight/90 backdrop-blur">

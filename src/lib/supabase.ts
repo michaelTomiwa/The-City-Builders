@@ -5,6 +5,16 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
+export type Page = {
+  id: string;
+  title: string;
+  slug: string;
+  content: string;
+  published: boolean;
+  nav_label: string | null;
+  nav_order: number;
+};
+
 export type Series = {
   id: string;
   title: string;

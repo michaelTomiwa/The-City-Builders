@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { supabase, type Sermon, type Series } from "@/lib/supabase";
 import { Reveal } from "@/components/site/reveal";
 
@@ -76,16 +77,29 @@ export default async function SermonsPage({
             <li key={sermon.id}>
               <Link
                 href={`/sermons/${sermon.slug}`}
-                className="group flex flex-col gap-1 py-6 transition-transform duration-300 hover:translate-x-1 sm:flex-row sm:items-baseline sm:gap-8"
+                className="group flex items-center gap-5 py-5 transition-transform duration-300 hover:translate-x-1"
               >
-                <span className="w-44 shrink-0 text-sm text-paper-dim">
-                  {formatDate(sermon.streamed_at)}
-                </span>
-                <div>
-                  <p className="text-xs text-gold-text">{sermon.series?.title ?? "Message"}</p>
-                  <h2 className="mt-1 font-display text-xl text-paper group-hover:text-gold-text">
-                    {sermon.title}
-                  </h2>
+                {sermon.thumbnail_url && (
+                  <div className="hidden h-16 w-28 shrink-0 overflow-hidden rounded-sm bg-dusk-2 sm:block">
+                    <Image
+                      src={sermon.thumbnail_url}
+                      alt=""
+                      width={224}
+                      height={126}
+                      className="h-full w-full object-cover"
+                    />
+                  </div>
+                )}
+                <div className="flex flex-1 flex-col gap-1 sm:flex-row sm:items-baseline sm:gap-8">
+                  <span className="w-44 shrink-0 text-sm text-paper-dim">
+                    {formatDate(sermon.streamed_at)}
+                  </span>
+                  <div>
+                    <p className="text-xs text-gold-text">{sermon.series?.title ?? "Message"}</p>
+                    <h2 className="mt-1 font-display text-xl text-paper group-hover:text-gold-text">
+                      {sermon.title}
+                    </h2>
+                  </div>
                 </div>
               </Link>
             </li>

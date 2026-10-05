@@ -45,15 +45,27 @@ export default async function SermonPage({ params }: PageProps<"/sermons/[slug]"
         </p>
       )}
 
-      {sermon.youtube_url && (
-        <a
-          href={sermon.youtube_url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="mt-8 inline-block rounded-sm bg-gold px-6 py-2.5 text-sm font-medium text-ink hover:bg-gold-soft"
-        >
-          Watch on YouTube
-        </a>
+      {sermon.youtube_video_id ? (
+        <div className="mt-8 aspect-video w-full overflow-hidden rounded-sm border border-steel">
+          <iframe
+            className="h-full w-full"
+            src={`https://www.youtube-nocookie.com/embed/${sermon.youtube_video_id}`}
+            title={sermon.title}
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+          />
+        </div>
+      ) : (
+        sermon.youtube_url && (
+          <a
+            href={sermon.youtube_url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-8 inline-block rounded-sm bg-gold px-6 py-2.5 text-sm font-medium text-ink hover:bg-gold-soft"
+          >
+            Watch on YouTube
+          </a>
+        )
       )}
     </article>
   );

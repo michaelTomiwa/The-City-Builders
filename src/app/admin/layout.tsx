@@ -3,6 +3,13 @@ import { createClient } from "@/lib/supabase-server";
 import { LogoMark } from "@/components/site/logo-mark";
 import { signOut } from "./actions";
 
+const navItems = [
+  { href: "/admin", label: "Posts" },
+  { href: "/admin/posts/new", label: "New post" },
+  { href: "/admin/pages", label: "Pages" },
+  { href: "/admin/pages/new", label: "New page" },
+];
+
 export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
   const supabase = await createClient();
   const {
@@ -12,30 +19,36 @@ export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
   if (!user) return children;
 
   return (
-    <div className="min-h-screen bg-midnight">
-      <header className="border-b border-steel/60">
-        <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
+    <div className="min-h-screen bg-midnight md:flex">
+      <aside className="flex shrink-0 flex-col justify-between border-b border-steel/60 px-6 py-6 md:w-56 md:border-b-0 md:border-r md:px-5 md:py-8">
+        <div>
           <Link href="/admin" className="flex items-center gap-2.5">
             <LogoMark className="h-7 w-7 text-gold" />
             <span className="font-display text-lg text-paper">Admin</span>
           </Link>
-          <nav className="flex items-center gap-6 text-sm">
-            <Link href="/admin" className="text-paper-dim hover:text-gold-text">
-              Posts
-            </Link>
-            <Link href="/admin/posts/new" className="text-paper-dim hover:text-gold-text">
-              New post
-            </Link>
-            <Link href="/" className="text-paper-dim hover:text-gold-text">
-              View site
-            </Link>
-            <form action={signOut}>
-              <button className="text-paper-dim hover:text-gold-text">Sign out</button>
-            </form>
+          <nav className="mt-10 flex flex-row flex-wrap gap-x-5 gap-y-2 text-sm md:flex-col md:gap-2">
+            {navItems.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className="text-paper-dim transition-colors hover:text-gold-text"
+              >
+                {item.label}
+              </Link>
+            ))}
           </nav>
         </div>
-      </header>
-      <main className="mx-auto max-w-5xl px-6 py-12">{children}</main>
+
+        <div className="mt-8 flex flex-col gap-2 text-sm md:mt-0">
+          <Link href="/" className="text-paper-dim hover:text-gold-text">
+            View site
+          </Link>
+          <form action={signOut}>
+            <button className="text-paper-dim hover:text-gold-text">Sign out</button>
+          </form>
+        </div>
+      </aside>
+      <main className="mx-auto w-full max-w-4xl px-6 py-12">{children}</main>
     </div>
   );
 }

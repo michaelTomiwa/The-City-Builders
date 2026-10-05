@@ -4,6 +4,9 @@ import { supabase, type Sermon, type Post, type ChurchEvent } from "@/lib/supaba
 import { Skyline } from "@/components/site/skyline";
 import { Button } from "@/components/ui/button";
 import { Reveal } from "@/components/site/reveal";
+import { LiveStream } from "@/components/site/live-stream";
+import { StaggerGrid, StaggerItem } from "@/components/site/stagger-grid";
+import { ParallaxHeroArt } from "@/components/site/parallax-hero-art";
 
 export const revalidate = 60;
 
@@ -58,15 +61,7 @@ export default async function HomePage() {
     <>
       {/* Hero */}
       <section className="relative overflow-hidden">
-        <Image
-          src="/images/hero-design-export.jpg"
-          alt=""
-          width={1199}
-          height={685}
-          priority
-          aria-hidden="true"
-          className="pointer-events-none absolute -right-16 -top-10 hidden w-[640px] opacity-80 sm:block lg:w-[760px]"
-        />
+        <ParallaxHeroArt />
         <div className="relative mx-auto max-w-6xl px-6 pt-16 pb-10 sm:pt-24">
           <p className="text-sm text-paper-dim">The City Builders · Pastor Michael Tomiwa</p>
           <h1 className="mt-6 max-w-3xl font-display text-[2.75rem] leading-[1.05] text-paper sm:text-6xl">
@@ -100,6 +95,16 @@ export default async function HomePage() {
         </div>
 
         <Skyline className="h-40 w-full sm:h-56" />
+      </section>
+
+      {/* Live now */}
+      <section className="border-t border-steel/60">
+        <Reveal className="mx-auto max-w-4xl px-6 py-20">
+          <h2 className="font-display text-3xl text-paper">Join the watch</h2>
+          <div className="mt-6">
+            <LiveStream />
+          </div>
+        </Reveal>
       </section>
 
       {/* Welcome from the pastor */}
@@ -142,10 +147,12 @@ export default async function HomePage() {
 
       {/* What we build */}
       <section className="border-t border-steel/60">
-        <Reveal className="mx-auto max-w-6xl px-6 py-20">
-          <h2 className="font-display text-3xl text-paper">What we build here</h2>
-          <div className="mt-10 grid gap-10 md:grid-cols-12">
-            <div className="md:col-span-7 border-l border-steel/60 pl-6">
+        <div className="mx-auto max-w-6xl px-6 py-20">
+          <Reveal>
+            <h2 className="font-display text-3xl text-paper">What we build here</h2>
+          </Reveal>
+          <StaggerGrid className="mt-10 grid gap-10 md:grid-cols-12">
+            <StaggerItem className="md:col-span-7 border-l border-steel/60 pl-6">
               <h3 className="font-display text-2xl text-gold-text">Night Watch</h3>
               <p className="mt-3 max-w-md text-paper-dim leading-relaxed">
                 Late into the night, we stand watch in prayer and the prophetic word —
@@ -154,28 +161,28 @@ export default async function HomePage() {
               <Link href="/sermons?series=night-watch" className="mt-4 inline-block text-sm text-paper hover:text-gold-text">
                 Enter the watch
               </Link>
-            </div>
-            <div className="md:col-span-5 border-l border-steel/60 pl-6">
+            </StaggerItem>
+            <StaggerItem className="md:col-span-5 border-l border-steel/60 pl-6">
               <h3 className="font-display text-xl text-gold-text">Morning Prayers</h3>
               <p className="mt-3 text-paper-dim leading-relaxed">
                 Begin the day anchored in prayer before the world asks anything of you.
               </p>
-            </div>
-            <div className="md:col-span-5 border-l border-steel/60 pl-6">
+            </StaggerItem>
+            <StaggerItem className="md:col-span-5 border-l border-steel/60 pl-6">
               <h3 className="font-display text-xl text-gold-text">Compass</h3>
               <p className="mt-3 text-paper-dim leading-relaxed">
                 A multi-day series on discerning direction when the way isn&apos;t clear.
               </p>
-            </div>
-            <div className="md:col-span-7 border-l border-steel/60 pl-6">
+            </StaggerItem>
+            <StaggerItem className="md:col-span-7 border-l border-steel/60 pl-6">
               <h3 className="font-display text-2xl text-gold-text">Word for the Month</h3>
               <p className="mt-3 max-w-md text-paper-dim leading-relaxed">
                 A prophetic word to carry into the weeks ahead — direction for the
                 season you&apos;re actually in.
               </p>
-            </div>
-          </div>
-        </Reveal>
+            </StaggerItem>
+          </StaggerGrid>
+        </div>
       </section>
 
       {/* Latest from the watch */}
@@ -193,9 +200,24 @@ export default async function HomePage() {
                 <Link
                   key={sermon.id}
                   href={`/sermons/${sermon.slug}`}
-                  className="group block border-t border-steel/60 pt-5 transition-transform duration-300 hover:-translate-y-1"
+                  className="group block transition-transform duration-300 hover:-translate-y-1"
                 >
-                  <p className="text-xs text-paper-dim">
+                  <div className="aspect-video overflow-hidden rounded-sm bg-dusk-2">
+                    {sermon.thumbnail_url ? (
+                      <Image
+                        src={sermon.thumbnail_url}
+                        alt=""
+                        width={480}
+                        height={270}
+                        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                      />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center">
+                        <Skyline className="h-16 w-full opacity-60" />
+                      </div>
+                    )}
+                  </div>
+                  <p className="mt-4 text-xs text-paper-dim">
                     {sermon.series?.title ?? "Message"} · {formatDate(sermon.streamed_at)}
                   </p>
                   <h3 className="mt-2 font-display text-xl text-paper group-hover:text-gold-text">

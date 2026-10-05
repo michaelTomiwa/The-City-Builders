@@ -6,10 +6,30 @@ import { FastingTracker } from "@/components/tools/fasting-tracker";
 import { ScriptureFlashcards } from "@/components/tools/scripture-flashcards";
 import { WorshipEmbed } from "@/components/tools/worship-embed";
 import { Reveal } from "@/components/site/reveal";
+import {
+  VerseIcon,
+  TimerIcon,
+  ReadingIcon,
+  FastingIcon,
+  FlashcardIcon,
+  WorshipIcon,
+} from "@/components/tools/tool-icons";
+import type { ReactNode } from "react";
 
 export const metadata: Metadata = {
   title: "Resources — The City Builders",
 };
+
+function ToolHeading({ icon, title }: { icon: ReactNode; title: string }) {
+  return (
+    <div className="flex items-center gap-3">
+      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-gold text-gold">
+        {icon}
+      </span>
+      <h2 className="font-display text-xl text-paper">{title}</h2>
+    </div>
+  );
+}
 
 export default function ToolsPage() {
   return (
@@ -26,7 +46,7 @@ export default function ToolsPage() {
       <div className="mt-16 space-y-16">
         <Reveal>
           <section>
-            <h2 className="font-display text-xl text-paper">Today&apos;s word</h2>
+            <ToolHeading icon={<VerseIcon className="h-5 w-5" />} title="Today's word" />
             <div className="mt-6">
               <VerseOfDay />
             </div>
@@ -35,7 +55,7 @@ export default function ToolsPage() {
 
         <Reveal>
           <section className="border-t border-steel/60 pt-16">
-            <h2 className="font-display text-xl text-paper">Prayer timer</h2>
+            <ToolHeading icon={<TimerIcon className="h-5 w-5" />} title="Prayer timer" />
             <p className="mt-2 max-w-md text-paper-dim">
               Set aside focused time, Night Watch style.
             </p>
@@ -47,7 +67,7 @@ export default function ToolsPage() {
 
         <Reveal>
           <section className="border-t border-steel/60 pt-16">
-            <h2 className="font-display text-xl text-paper">Weekly reading plan</h2>
+            <ToolHeading icon={<ReadingIcon className="h-5 w-5" />} title="Weekly reading plan" />
             <p className="mt-2 max-w-md text-paper-dim">
               Seven short readings, one for each day of the week.
             </p>
@@ -59,7 +79,7 @@ export default function ToolsPage() {
 
         <Reveal>
           <section className="border-t border-steel/60 pt-16">
-            <h2 className="font-display text-xl text-paper">Fasting tracker</h2>
+            <ToolHeading icon={<FastingIcon className="h-5 w-5" />} title="Fasting tracker" />
             <p className="mt-2 max-w-md text-paper-dim">
               Start a fast, mark each day you keep it.
             </p>
@@ -71,7 +91,7 @@ export default function ToolsPage() {
 
         <Reveal>
           <section className="border-t border-steel/60 pt-16">
-            <h2 className="font-display text-xl text-paper">Scripture memory</h2>
+            <ToolHeading icon={<FlashcardIcon className="h-5 w-5" />} title="Scripture memory" />
             <p className="mt-2 max-w-md text-paper-dim">
               Flashcards for the verses that carry a season.
             </p>
@@ -83,7 +103,7 @@ export default function ToolsPage() {
 
         <Reveal>
           <section className="border-t border-steel/60 pt-16">
-            <h2 className="font-display text-xl text-paper">Worship with us</h2>
+            <ToolHeading icon={<WorshipIcon className="h-5 w-5" />} title="Worship with us" />
             <p className="mt-2 max-w-md text-paper-dim">
               A message from a recent Night Watch.
             </p>

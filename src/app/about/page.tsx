@@ -1,5 +1,6 @@
 import Image from "next/image";
 import { Skyline } from "@/components/site/skyline";
+import { Reveal } from "@/components/site/reveal";
 
 export default function AboutPage() {
   return (
@@ -61,6 +62,23 @@ export default function AboutPage() {
           </div>
         </div>
       </div>
+
+      <Reveal>
+        <div className="border-t border-steel/60 bg-dusk/40 py-16">
+          <div className="mx-auto max-w-3xl px-6 text-center">
+            <Image
+              src="/images/about-illustration.jpg"
+              alt="A small group gathered together in prayer"
+              width={1400}
+              height={800}
+              className="mx-auto w-full max-w-xl"
+            />
+            <p className="mt-4 text-sm text-paper-dim">
+              We don&apos;t build alone — every watch, every week.
+            </p>
+          </div>
+        </div>
+      </Reveal>
 
       <Skyline className="h-32 w-full opacity-70 sm:h-44" />
     </div>
