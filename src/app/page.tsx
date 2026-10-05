@@ -59,10 +59,10 @@ export default async function HomePage() {
       {/* Hero */}
       <section className="relative overflow-hidden">
         <Image
-          src="/images/hero-design-export.png"
+          src="/images/hero-design-export.jpg"
           alt=""
-          width={2400}
-          height={1371}
+          width={1199}
+          height={685}
           priority
           aria-hidden="true"
           className="pointer-events-none absolute -right-16 -top-10 hidden w-[640px] opacity-80 sm:block lg:w-[760px]"
