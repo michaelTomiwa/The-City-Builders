@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { NightCity } from "./night-city";
 import { Stars } from "./stars";
+import { Celestial } from "./celestial";
 
 /** The night-sky banner that opens every inner page, so the whole site shares the hero's world. */
 export function PageHero({
@@ -13,8 +14,9 @@ export function PageHero({
   children?: ReactNode;
 }) {
   return (
-    <section className="on-night relative overflow-hidden bg-night text-starlight">
+    <section className="on-night sky relative overflow-hidden text-starlight">
       <Stars />
+      <Celestial />
       <div className="relative mx-auto max-w-6xl px-6 pt-16 pb-[clamp(6rem,13vw,10rem)] sm:pt-20">
         <h1 className="hero-rise max-w-3xl font-display text-[clamp(2.5rem,6vw,4.5rem)] leading-[1.02]">
           {title}

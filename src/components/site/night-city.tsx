@@ -82,22 +82,22 @@ export function NightCity({ className, compact = false }: { className?: string; 
         </linearGradient>
       </defs>
 
-      <rect x="0" y={HEIGHT / 3} width={WIDTH} height={(HEIGHT * 2) / 3} fill="url(#horizon-glow)" />
+      <rect x="0" y={HEIGHT / 3} width={WIDTH} height={(HEIGHT * 2) / 3} fill="url(#horizon-glow)" className="horizon-glow" />
 
       {/* far row */}
       {buildings
         .filter((b) => b.layer === "back")
         .map((b, i) => (
-          <rect key={`b${i}`} x={b.x} y={GROUND - b.h} width={b.w} height={b.h} fill="#1a2a57" />
+          <rect key={`b${i}`} x={b.x} y={GROUND - b.h} width={b.w} height={b.h} fill="#1a2a57" className="city-back" />
         ))}
 
       {/* crane over the far row, working through the night */}
       <g transform={landmarks}>
-      <g stroke="#2c3f78" strokeWidth="3" fill="none">
+      <g stroke="#2c3f78" strokeWidth="3" fill="none" className="city-crane">
         <path d="M1080 352 V40 M1060 40 H1260 M1080 40 L1120 18 L1160 40 M1080 70 L1110 40" />
         <path d="M1230 40 V96" strokeWidth="1.5" />
       </g>
-      <rect x="1222" y="96" width="16" height="10" fill="#2c3f78" />
+      <rect x="1222" y="96" width="16" height="10" fill="#2c3f78" className="city-crane-fill" />
       <circle cx="1120" cy="16" r="3" fill="#e55a3c" className="animate-pulse" />
       </g>
 
@@ -105,12 +105,12 @@ export function NightCity({ className, compact = false }: { className?: string; 
       {buildings
         .filter((b) => b.layer === "front")
         .map((b, i) => (
-          <rect key={`f${i}`} x={b.x} y={GROUND - b.h} width={b.w} height={b.h} fill="#0b1531" />
+          <rect key={`f${i}`} x={b.x} y={GROUND - b.h} width={b.w} height={b.h} fill="#0b1531" className="city-front" />
         ))}
 
       {/* the arch from the City Builders mark, standing in the middle of the city */}
       <g transform={landmarks}>
-      <g fill="#0b1531">
+      <g fill="#0b1531" className="city-front">
         <path d="M640 352 V250 A80 80 0 0 1 800 250 V352 H760 V262 A40 40 0 0 0 680 262 V352 Z" />
         <rect x="628" y="340" width="184" height="12" />
       </g>
@@ -130,11 +130,11 @@ export function NightCity({ className, compact = false }: { className?: string; 
             style={{ animationDelay: `${w.delay.toFixed(2)}s` }}
           />
         ) : (
-          <rect key={i} x={w.x} y={w.y} width="8" height="10" fill="#16244a" />
+          <rect key={i} x={w.x} y={w.y} width="8" height="10" fill="#16244a" className="window-off" />
         )
       )}
 
-      <rect x="0" y={GROUND} width={WIDTH} height={HEIGHT - GROUND} fill="#0b1531" />
+      <rect x="0" y={GROUND} width={WIDTH} height={HEIGHT - GROUND} fill="#0b1531" className="city-front" />
     </svg>
   );
 }

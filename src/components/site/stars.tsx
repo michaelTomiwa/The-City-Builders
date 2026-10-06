@@ -8,7 +8,7 @@ const stars = [
 export function Stars({ shooting = false }: { shooting?: boolean }) {
   return (
     <div className="pointer-events-none absolute inset-0" aria-hidden="true">
-      <svg className="absolute inset-0 h-full w-full">
+      <svg className="star-field absolute inset-0 h-full w-full">
         {stars.map(([x, y], i) => (
           <circle
             key={i}

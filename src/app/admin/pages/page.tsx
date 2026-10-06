@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase-server";
 import { deletePage } from "../actions";
+import { AdminHeader } from "@/components/admin/ui";
 
 export default async function AdminPagesList() {
   const supabase = await createClient();
@@ -11,21 +12,13 @@ export default async function AdminPagesList() {
 
   return (
     <div>
-      <div className="flex items-center justify-between">
-        <h1 className="font-display text-3xl text-paper">Pages</h1>
-        <Link
-          href="/admin/pages/new"
-          className="rounded-sm bg-gold px-5 py-2 text-sm font-medium text-ink hover:bg-gold-soft"
-        >
-          New page
-        </Link>
-      </div>
-      <p className="mt-3 text-sm text-paper-dim">
-        Create custom pages and sections. Give a page a nav label to show it in
-        the site menu automatically.
-      </p>
+      <AdminHeader
+        title="Pages"
+        description="Create custom pages and sections. Give a page a menu label to show it in the site menu automatically."
+        action={{ href: "/admin/pages/new", label: "New page" }}
+      />
 
-      <ul className="mt-10 divide-y divide-steel/60">
+      <ul className="mt-8 divide-y divide-steel overflow-hidden rounded-md border border-steel bg-white/80 px-4">
         {(pages ?? []).map((page) => (
           <li key={page.id} className="flex items-center justify-between py-4">
             <div>

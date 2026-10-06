@@ -19,13 +19,16 @@ export function ReadingPlan() {
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
-    try {
-      const raw = window.localStorage.getItem(STORAGE_KEY);
-      if (raw) setChecked(JSON.parse(raw));
-    } catch {
-      // ignore unavailable storage
-    }
-    setLoaded(true);
+    const id = setTimeout(() => {
+      try {
+        const raw = window.localStorage.getItem(STORAGE_KEY);
+        if (raw) setChecked(JSON.parse(raw));
+      } catch {
+        // ignore unavailable storage
+      }
+      setLoaded(true);
+    }, 0);
+    return () => clearTimeout(id);
   }, []);
 
   useEffect(() => {

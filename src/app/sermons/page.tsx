@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { PageHero } from "@/components/site/page-hero";
+import { getFeedVideos, formatViews } from "@/lib/youtube";
 import Image from "next/image";
 import { supabase, type Sermon, type Series } from "@/lib/supabase";
 import { Reveal } from "@/components/site/reveal";
@@ -35,7 +36,7 @@ export default async function SermonsPage({
     if (match) query = query.eq("series_id", match.id);
   }
 
-  const { data: sermons } = await query;
+  const [{ data: sermons }, fresh] = await Promise.all([query, seriesSlug ? Promise.resolve([]) : getFeedVideos(6)]);
   const list = (sermons ?? []) as Sermon[];
 
   return (
@@ -45,7 +46,37 @@ export default async function SermonsPage({
         intro={<>Every Night Watch, Morning Prayer, and series session — in one place.</>}
       />
     <div className="mx-auto max-w-6xl px-6 py-16">
+      {fresh.length > 0 && (
+        <section className="mb-20">
+          <h2 className="font-display text-4xl text-paper">Fresh from YouTube</h2>
+          <ul className="mt-8 grid gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
+            {fresh.map((video) => (
+              <li key={video.id}>
+                <a href={video.href} target="_blank" rel="noopener noreferrer" className="group block">
+                  <span className="block aspect-video overflow-hidden bg-dusk-2">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={video.thumbnail}
+                      alt=""
+                      loading="lazy"
+                      className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    />
+                  </span>
+                  <span className="mt-3 line-clamp-2 block font-display text-xl leading-snug text-paper group-hover:text-gold-text">
+                    {video.title}
+                  </span>
+                  <span className="mt-1 block text-sm text-paper-dim">
+                    {formatDate(video.publishedAt)}
+                    {formatViews(video.views) && <>, {formatViews(video.views)}</>}
+                  </span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
+      <h2 className="font-display text-4xl text-paper">The archive</h2>
       <div className="mt-8 flex flex-wrap gap-3">
         <Link
           href="/sermons"

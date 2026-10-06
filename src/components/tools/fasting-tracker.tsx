@@ -17,13 +17,16 @@ export function FastingTracker() {
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
-    try {
-      const raw = window.localStorage.getItem(STORAGE_KEY);
-      if (raw) setFast(JSON.parse(raw));
-    } catch {
-      // ignore
-    }
-    setLoaded(true);
+    const id = setTimeout(() => {
+      try {
+        const raw = window.localStorage.getItem(STORAGE_KEY);
+        if (raw) setFast(JSON.parse(raw));
+      } catch {
+        // ignore
+      }
+      setLoaded(true);
+    }, 0);
+    return () => clearTimeout(id);
   }, []);
 
   useEffect(() => {

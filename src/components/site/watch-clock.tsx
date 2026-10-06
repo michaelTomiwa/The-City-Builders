@@ -129,7 +129,7 @@ export function WatchClock({ events }: { events: WatchEvent[] }) {
             href={STREAMS_URL}
             target="_blank"
             rel="noopener noreferrer"
-            className="mt-6 inline-flex h-11 w-full items-center justify-center bg-lamp px-6 text-[0.95rem] font-medium text-ink transition-colors hover:bg-gold-soft"
+            className="mt-6 inline-flex h-11 w-full items-center justify-center bg-gold px-6 text-[0.95rem] font-medium text-ink transition-colors hover:bg-gold-soft"
           >
             Join the live watch
           </a>

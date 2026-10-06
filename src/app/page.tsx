@@ -2,10 +2,11 @@ import Link from "next/link";
 import Image from "next/image";
 import { supabase, type Post, type ChurchEvent } from "@/lib/supabase";
 import { LiveStream } from "@/components/site/live-stream";
-import { MomentsGallery } from "@/components/site/moments-gallery";
+import { RecentSessions } from "@/components/site/recent-sessions";
 import { NightCity } from "@/components/site/night-city";
 import { WatchClock } from "@/components/site/watch-clock";
 import { Stars } from "@/components/site/stars";
+import { Celestial } from "@/components/site/celestial";
 import { HeroHeadline } from "@/components/site/hero-headline";
 import { Parallax } from "@/components/site/parallax";
 import { ScriptureBand } from "@/components/site/scripture-band";
@@ -111,16 +112,9 @@ export default async function HomePage() {
   return (
     <>
       {/* Hero: the city at night, keeping watch */}
-      <section className="on-night relative overflow-hidden bg-night text-starlight">
+      <section className="on-night sky relative overflow-hidden text-starlight">
         <Stars shooting />
-        {/* the moon over the city */}
-        <div
-          aria-hidden="true"
-          className="hero-rise absolute right-5 top-3 h-11 w-11 rounded-full bg-[#f4e7c6] shadow-[0_0_80px_10px_rgba(244,231,198,0.18)] [animation-delay:200ms] sm:right-[8%] sm:top-8 sm:h-24 sm:w-24 lg:right-[40%] lg:top-14 lg:h-28 lg:w-28"
-        >
-          <span className="absolute left-[22%] top-[30%] h-[18%] w-[18%] rounded-full bg-[#e6d5ad]" />
-          <span className="absolute left-[55%] top-[55%] h-[12%] w-[12%] rounded-full bg-[#e6d5ad]" />
-        </div>
+        <Celestial />
 
         <div className="relative mx-auto grid max-w-6xl gap-12 px-6 pt-16 pb-[clamp(11rem,26vw,22rem)] sm:pt-24 lg:grid-cols-[1fr_auto] lg:items-end">
           <div>
@@ -136,7 +130,7 @@ export default async function HomePage() {
             <div className="hero-rise mt-9 flex flex-wrap items-center gap-x-6 gap-y-4 [animation-delay:850ms]">
               <a
                 href="#watch"
-                className="inline-flex h-12 items-center bg-lamp px-7 font-medium text-ink shadow-[0_0_30px_-8px_#f0b44c] transition-all hover:-translate-y-0.5 hover:bg-gold-soft"
+                className="inline-flex h-12 items-center bg-gold px-7 font-medium text-ink shadow-[0_0_30px_-8px_#f0b44c] transition-all hover:-translate-y-0.5 hover:bg-gold-soft"
               >
                 Join the watch
               </a>
@@ -189,6 +183,8 @@ export default async function HomePage() {
       </section>
 
       <ScriptureBand />
+
+      <RecentSessions />
 
       {/* A word from the pastor */}
       <section>
@@ -293,7 +289,6 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <MomentsGallery />
 
       {/* Gatherings + writing */}
       {(events.length > 0 || posts.length > 0) && (
