@@ -5,8 +5,8 @@
 */
 
 const WIDTH = 1440;
-const HEIGHT = 360;
-const GROUND = 352;
+const FULL_HEIGHT = 360;
+const COMPACT_HEIGHT = 170;
 
 function seeded(seed: number) {
   let s = seed;
@@ -18,7 +18,7 @@ function seeded(seed: number) {
 
 type Building = { x: number; w: number; h: number; layer: "back" | "front" };
 
-function buildCity() {
+function buildCity(scale: number, ground: number, archHalfWidth: number) {
   const rand = seeded(1110);
   const buildings: Building[] = [];
 
@@ -26,9 +26,9 @@ function buildCity() {
     let x = layer === "back" ? -20 : -10;
     while (x < WIDTH) {
       const w = 46 + Math.round(rand() * 70);
-      const tall = layer === "back" ? 150 + rand() * 170 : 70 + rand() * 170;
+      const tall = (layer === "back" ? 150 + rand() * 170 : 70 + rand() * 170) * scale;
       // keep the middle of the near row clear for the arch
-      const overlapsArch = layer === "front" && x + w > 616 && x < 824;
+      const overlapsArch = layer === "front" && x + w > 720 - archHalfWidth && x < 720 + archHalfWidth;
       if (!overlapsArch) buildings.push({ x, w, h: Math.round(tall), layer });
       x += w + (layer === "back" ? 4 + rand() * 14 : 18 + rand() * 40);
     }
@@ -44,7 +44,7 @@ function buildCity() {
         const lit = rand() < 0.28;
         windows.push({
           x: b.x + offset + c * 13,
-          y: GROUND - b.h + 14 + r * 17,
+          y: ground - b.h + 14 + r * 17,
           lit,
           delay: lit ? 0.4 + rand() * 2.6 : 0,
         });
@@ -55,9 +55,19 @@ function buildCity() {
   return { buildings, windows };
 }
 
-const { buildings, windows } = buildCity();
+const cities = {
+  full: buildCity(1, FULL_HEIGHT - 8, 104),
+  compact: buildCity(0.42, COMPACT_HEIGHT - 8, 56),
+};
 
-export function NightCity({ className }: { className?: string }) {
+export function NightCity({ className, compact = false }: { className?: string; compact?: boolean }) {
+  const HEIGHT = compact ? COMPACT_HEIGHT : FULL_HEIGHT;
+  const GROUND = HEIGHT - 8;
+  const { buildings, windows } = compact ? cities.compact : cities.full;
+  // the arch and crane are drawn for the full city; shrink them onto the compact ground line
+  const landmarkScale = compact ? 0.5 : 1;
+  const landmarks = `translate(720 ${GROUND}) scale(${landmarkScale}) translate(-720 -352)`;
+
   return (
     <svg
       viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
@@ -72,7 +82,7 @@ export function NightCity({ className }: { className?: string }) {
         </linearGradient>
       </defs>
 
-      <rect x="0" y="120" width={WIDTH} height={HEIGHT - 120} fill="url(#horizon-glow)" />
+      <rect x="0" y={HEIGHT / 3} width={WIDTH} height={(HEIGHT * 2) / 3} fill="url(#horizon-glow)" />
 
       {/* far row */}
       {buildings
@@ -82,12 +92,14 @@ export function NightCity({ className }: { className?: string }) {
         ))}
 
       {/* crane over the far row, working through the night */}
+      <g transform={landmarks}>
       <g stroke="#2c3f78" strokeWidth="3" fill="none">
         <path d="M1080 352 V40 M1060 40 H1260 M1080 40 L1120 18 L1160 40 M1080 70 L1110 40" />
         <path d="M1230 40 V96" strokeWidth="1.5" />
       </g>
       <rect x="1222" y="96" width="16" height="10" fill="#2c3f78" />
       <circle cx="1120" cy="16" r="3" fill="#e55a3c" className="animate-pulse" />
+      </g>
 
       {/* near row */}
       {buildings
@@ -97,11 +109,13 @@ export function NightCity({ className }: { className?: string }) {
         ))}
 
       {/* the arch from the City Builders mark, standing in the middle of the city */}
+      <g transform={landmarks}>
       <g fill="#0b1531">
         <path d="M640 352 V250 A80 80 0 0 1 800 250 V352 H760 V262 A40 40 0 0 0 680 262 V352 Z" />
         <rect x="628" y="340" width="184" height="12" />
       </g>
       <path d="M708 176 H732 L727 196 H713 Z" fill="#f0b44c" className="window-lit" style={{ animationDelay: "3.1s" }} />
+      </g>
 
       {windows.map((w, i) =>
         w.lit ? (

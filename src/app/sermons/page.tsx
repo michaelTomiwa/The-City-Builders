@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { PageHero } from "@/components/site/page-hero";
 import Image from "next/image";
 import { supabase, type Sermon, type Series } from "@/lib/supabase";
 import { Reveal } from "@/components/site/reveal";
@@ -38,14 +39,12 @@ export default async function SermonsPage({
   const list = (sermons ?? []) as Sermon[];
 
   return (
+    <>
+      <PageHero
+        title={<>The watch, archived.</>}
+        intro={<>Every Night Watch, Morning Prayer, and series session — in one place.</>}
+      />
     <div className="mx-auto max-w-6xl px-6 py-16">
-      <p className="text-sm text-paper-dim">Messages &amp; streams</p>
-      <h1 className="mt-3 font-display text-4xl text-paper sm:text-5xl">
-        The watch, archived.
-      </h1>
-      <p className="mt-4 max-w-xl text-paper-dim leading-relaxed">
-        Every Night Watch, Morning Prayer, and series session — in one place.
-      </p>
 
       <div className="mt-8 flex flex-wrap gap-3">
         <Link
@@ -110,5 +109,6 @@ export default async function SermonsPage({
         </ul>
       </Reveal>
     </div>
+    </>
   );
 }

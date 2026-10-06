@@ -5,6 +5,8 @@ import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { LogoMark } from "./logo-mark";
+import { LiveBadge } from "./live-badge";
+import { ScrollProgress } from "./scroll-progress";
 
 const baseLinks = [
   { href: "/sermons", label: "The watch" },
@@ -13,6 +15,7 @@ const baseLinks = [
   { href: "/tools", label: "Resources" },
   { href: "/prayer", label: "Prayer wall" },
   { href: "/about", label: "About" },
+  { href: "/contact", label: "Contact" },
 ];
 
 export function SiteHeader({
@@ -26,14 +29,19 @@ export function SiteHeader({
   return (
     <header className="on-night sticky top-0 z-40 border-b border-night-3/70 bg-night/95 backdrop-blur">
       <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-        <Link href="/" className="flex items-center gap-2.5">
-          <LogoMark className="h-9 w-9 text-lamp" />
-          <span className="font-display text-xl text-starlight">
-            City Builders
+        <div className="flex items-center gap-4">
+          <Link href="/" className="group flex items-center gap-2.5">
+            <LogoMark className="h-9 w-9 text-lamp transition-transform duration-500 group-hover:-translate-y-0.5" />
+            <span className="font-display text-xl text-starlight">
+              City Builders
+            </span>
+          </Link>
+          <span className="hidden sm:block">
+            <LiveBadge />
           </span>
-        </Link>
+        </div>
 
-        <nav className="hidden items-center gap-8 md:flex">
+        <nav className="hidden items-center gap-6 lg:flex xl:gap-8">
           {links.map((link) => (
             <Link
               key={link.href}
@@ -52,7 +60,7 @@ export function SiteHeader({
         </nav>
 
         <button
-          className="flex h-9 w-9 items-center justify-center text-starlight md:hidden"
+          className="flex h-9 w-9 items-center justify-center text-starlight lg:hidden"
           onClick={() => setOpen((v) => !v)}
           aria-expanded={open}
           aria-label="Toggle menu"
@@ -79,6 +87,7 @@ export function SiteHeader({
           </span>
         </button>
       </div>
+      <ScrollProgress />
 
       <AnimatePresence>
         {open && (
@@ -87,9 +96,12 @@ export function SiteHeader({
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
-            className="flex flex-col gap-1 overflow-hidden border-t border-night-3/70 px-6 md:hidden"
+            className="flex flex-col gap-1 overflow-hidden border-t border-night-3/70 px-6 lg:hidden"
           >
             <div className="flex flex-col gap-1 pb-6 pt-2">
+              <div className="py-2 sm:hidden">
+                <LiveBadge />
+              </div>
               {links.map((link, i) => (
                 <motion.div
                   key={link.href}

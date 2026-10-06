@@ -5,6 +5,7 @@ import { supabase } from "@/lib/supabase";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
+import { CHURCH_EMAIL } from "@/lib/schedule";
 
 export function PrayerForm() {
   const [name, setName] = useState("");
@@ -92,7 +93,11 @@ export function PrayerForm() {
 
       {status === "error" && (
         <p className="text-sm text-violet">
-          Something went wrong — please try again in a moment.
+          Your request didn&apos;t send. Try again in a moment, or email it to{" "}
+          <a href={`mailto:${CHURCH_EMAIL}?subject=Prayer%20request`} className="underline underline-offset-4">
+            {CHURCH_EMAIL}
+          </a>
+          .
         </p>
       )}
 

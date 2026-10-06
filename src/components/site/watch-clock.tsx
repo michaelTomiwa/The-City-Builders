@@ -1,21 +1,20 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
+import {
+  STREAMS_URL,
+  googleCalendarUrl,
+  icsDataUrl,
+  serviceOccurrences,
+  type Occurrence,
+} from "@/lib/schedule";
 
-const STREAMS_URL = "https://www.youtube.com/@thecitybuilderscity/streams";
-const CHANNEL_URL = "https://www.youtube.com/@thecitybuilderscity?sub_confirmation=1";
+export type WatchEvent = Omit<Occurrence, "recurring">;
+
 const TWO_HOURS = 1000 * 60 * 60 * 2;
 
-export type WatchEvent = {
-  id: string;
-  title: string;
-  starts_at: string;
-  ends_at: string | null;
-  location: string | null;
-  description: string | null;
-};
-
-function endOf(event: WatchEvent) {
+function endOf(event: Occurrence) {
   return event.ends_at
     ? new Date(event.ends_at).getTime()
     : new Date(event.starts_at).getTime() + TWO_HOURS;
@@ -40,39 +39,13 @@ function lagosDate(iso: string) {
   });
 }
 
-function calendarStamp(ms: number) {
-  return new Date(ms).toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
+function localTime(iso: string) {
+  return new Date(iso).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
 }
 
-function googleCalendarUrl(event: WatchEvent) {
-  const params = new URLSearchParams({
-    action: "TEMPLATE",
-    text: `${event.title} — The City Builders`,
-    dates: `${calendarStamp(new Date(event.starts_at).getTime())}/${calendarStamp(endOf(event))}`,
-    details: `${event.description ?? ""}\n\nWatch live: ${STREAMS_URL}`.trim(),
-    location: event.location ?? STREAMS_URL,
-  });
-  return `https://calendar.google.com/calendar/render?${params}`;
-}
-
-function icsUrl(event: WatchEvent) {
-  const escape = (s: string) => s.replace(/([,;\\])/g, "\\$1").replace(/\n/g, "\\n");
-  const lines = [
-    "BEGIN:VCALENDAR",
-    "VERSION:2.0",
-    "PRODID:-//The City Builders//Watch//EN",
-    "BEGIN:VEVENT",
-    `UID:${event.id}@thecitybuilders`,
-    `DTSTAMP:${calendarStamp(Date.now())}`,
-    `DTSTART:${calendarStamp(new Date(event.starts_at).getTime())}`,
-    `DTEND:${calendarStamp(endOf(event))}`,
-    `SUMMARY:${escape(`${event.title} — The City Builders`)}`,
-    `DESCRIPTION:${escape(`Watch live: ${STREAMS_URL}`)}`,
-    `LOCATION:${escape(event.location ?? STREAMS_URL)}`,
-    "END:VEVENT",
-    "END:VCALENDAR",
-  ];
-  return `data:text/calendar;charset=utf-8,${encodeURIComponent(lines.join("\r\n"))}`;
+function isLagosZone() {
+  const offset = new Date().getTimezoneOffset();
+  return offset === -60;
 }
 
 function splitDuration(ms: number) {
@@ -83,6 +56,26 @@ function splitDuration(ms: number) {
     { value: Math.floor((total % 3600) / 60), label: "min" },
     { value: total % 60, label: "sec" },
   ];
+}
+
+function Digit({ value }: { value: number }) {
+  const text = String(value).padStart(2, "0");
+  return (
+    <span className="relative inline-block h-[1.15em] overflow-hidden align-bottom">
+      <AnimatePresence initial={false} mode="popLayout">
+        <motion.span
+          key={text}
+          initial={{ y: "-100%", opacity: 0 }}
+          animate={{ y: "0%", opacity: 1 }}
+          exit={{ y: "100%", opacity: 0 }}
+          transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+          className="inline-block"
+        >
+          {text}
+        </motion.span>
+      </AnimatePresence>
+    </span>
+  );
 }
 
 export function WatchClock({ events }: { events: WatchEvent[] }) {
@@ -98,17 +91,26 @@ export function WatchClock({ events }: { events: WatchEvent[] }) {
     };
   }, []);
 
-  const reference = now ?? 0;
-  const live = now
-    ? events.find((e) => new Date(e.starts_at).getTime() <= now && now < endOf(e))
-    : undefined;
-  const next = events.find((e) => new Date(e.starts_at).getTime() > reference);
+  if (now === null) {
+    return (
+      <div className="h-[23rem] w-full max-w-sm border border-night-3 bg-night-2/80" aria-hidden="true" />
+    );
+  }
+
+  const all: Occurrence[] = [...events, ...serviceOccurrences(now, 3)].sort((a, b) =>
+    a.starts_at.localeCompare(b.starts_at)
+  );
+  const live = all.find((e) => new Date(e.starts_at).getTime() <= now && now < endOf(e));
+  const next = all.find((e) => new Date(e.starts_at).getTime() > now);
 
   return (
-    <div className="w-full max-w-sm border border-night-3 bg-night-2/80 p-6 backdrop-blur-sm">
-      <p className="text-sm text-starlight-dim">
-        {now ? `It's ${lagosTime(new Date(now))} in Lagos` : "Lagos time"}
-      </p>
+    <motion.div
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.6, delay: 0.5, ease: [0.22, 1, 0.36, 1] }}
+      className="w-full max-w-sm border border-night-3 bg-night-2/80 p-6 shadow-[0_0_60px_-20px_rgba(240,180,76,0.35)] backdrop-blur-sm"
+    >
+      <p className="text-sm text-starlight-dim">It&rsquo;s {lagosTime(new Date(now))} in Lagos</p>
 
       {live ? (
         <>
@@ -119,7 +121,10 @@ export function WatchClock({ events }: { events: WatchEvent[] }) {
             </span>
             Live now
           </p>
-          <p className="mt-2 font-display text-2xl text-starlight">{live.title}</p>
+          <p className="mt-2 font-display text-3xl text-starlight">{live.title}</p>
+          <p className="mt-1 text-sm text-starlight-dim">
+            Started at {lagosTime(new Date(live.starts_at))}, Lagos time
+          </p>
           <a
             href={STREAMS_URL}
             target="_blank"
@@ -128,18 +133,27 @@ export function WatchClock({ events }: { events: WatchEvent[] }) {
           >
             Join the live watch
           </a>
+          {next && (
+            <p className="mt-4 text-sm text-starlight-dim">
+              After this: {next.title}, {lagosDate(next.starts_at)}
+            </p>
+          )}
         </>
       ) : next ? (
         <>
           <p className="mt-5 text-sm text-starlight-dim">Next gathering</p>
-          <p className="mt-1 font-display text-2xl leading-snug text-starlight">{next.title}</p>
-          <p className="mt-1 text-sm text-starlight-dim">{lagosDate(next.starts_at)}, Lagos time</p>
+          <p className="mt-1 font-display text-3xl leading-snug text-starlight">{next.title}</p>
+          <p className="mt-1 text-sm text-starlight-dim">
+            {lagosDate(next.starts_at)}, Lagos time
+            {!isLagosZone() && <> ({localTime(next.starts_at)} where you are)</>}
+          </p>
 
+          <p className="sr-only">Starts {lagosDate(next.starts_at)}, Lagos time.</p>
           <div className="mt-6 grid grid-cols-4 gap-2" aria-hidden="true">
-            {splitDuration(now ? new Date(next.starts_at).getTime() - now : 0).map((part) => (
-              <div key={part.label} className="border-t border-night-3 pt-2">
+            {splitDuration(new Date(next.starts_at).getTime() - now).map((part) => (
+              <div key={part.label} className="border-t border-lamp/40 pt-2">
                 <p className="text-3xl font-light tabular-nums text-starlight">
-                  {now ? String(part.value).padStart(2, "0") : "--"}
+                  <Digit value={part.value} />
                 </p>
                 <p className="text-xs text-starlight-dim">{part.label}</p>
               </div>
@@ -148,7 +162,7 @@ export function WatchClock({ events }: { events: WatchEvent[] }) {
 
           <div className="mt-6 flex flex-wrap gap-x-5 gap-y-2 text-sm">
             <a
-              href={googleCalendarUrl(next)}
+              href={googleCalendarUrl(next, next.recurring)}
               target="_blank"
               rel="noopener noreferrer"
               className="text-lamp underline-offset-4 hover:underline"
@@ -156,33 +170,15 @@ export function WatchClock({ events }: { events: WatchEvent[] }) {
               Add to Google Calendar
             </a>
             <a
-              href={icsUrl(next)}
+              href={icsDataUrl(next, next.recurring)}
               download="city-builders-gathering.ics"
               className="text-lamp underline-offset-4 hover:underline"
             >
-              Download for Apple / Outlook
+              Apple / Outlook
             </a>
           </div>
         </>
-      ) : (
-        <>
-          <p className="mt-5 font-display text-2xl leading-snug text-starlight">
-            The next watch hasn&rsquo;t been scheduled yet.
-          </p>
-          <p className="mt-2 text-sm leading-relaxed text-starlight-dim">
-            New gatherings are announced on our YouTube channel first. Subscribe
-            and turn on notifications to hear when we go live.
-          </p>
-          <a
-            href={CHANNEL_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mt-6 inline-flex h-11 w-full items-center justify-center border border-lamp px-6 text-[0.95rem] font-medium text-lamp transition-colors hover:bg-lamp hover:text-ink"
-          >
-            Subscribe on YouTube
-          </a>
-        </>
-      )}
-    </div>
+      ) : null}
+    </motion.div>
   );
 }

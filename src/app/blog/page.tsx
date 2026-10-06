@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { PageHero } from "@/components/site/page-hero";
 import { supabase, type Post } from "@/lib/supabase";
 import { Reveal } from "@/components/site/reveal";
 
@@ -22,15 +23,12 @@ export default async function BlogPage() {
   const posts = (data ?? []) as Post[];
 
   return (
+    <>
+      <PageHero
+        title={<>From the blog.</>}
+        intro={<>Reflections, teaching notes, and words for the season — from Pastor Michael Tomiwa and the City Builders team.</>}
+      />
     <div className="mx-auto max-w-6xl px-6 py-16">
-      <p className="text-sm text-paper-dim">Writing</p>
-      <h1 className="mt-3 font-display text-4xl text-paper sm:text-5xl">
-        From the blog.
-      </h1>
-      <p className="mt-4 max-w-xl text-paper-dim leading-relaxed">
-        Reflections, teaching notes, and words for the season — from Pastor
-        Michael Tomiwa and the City Builders team.
-      </p>
 
       <div className="mt-14 grid gap-10 sm:grid-cols-2">
         {posts.map((post, i) => (
@@ -58,5 +56,6 @@ export default async function BlogPage() {
         )}
       </div>
     </div>
+    </>
   );
 }

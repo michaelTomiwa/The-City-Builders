@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { PageHero } from "@/components/site/page-hero";
 import { VerseOfDay } from "@/components/tools/verse-of-day";
 import { PrayerTimer } from "@/components/tools/prayer-timer";
 import { ReadingPlan } from "@/components/tools/reading-plan";
@@ -33,15 +34,12 @@ function ToolHeading({ icon, title }: { icon: ReactNode; title: string }) {
 
 export default function ToolsPage() {
   return (
+    <>
+      <PageHero
+        title={<>Tools to help you build.</>}
+        intro={<>Small tools for the walk — a word for today, a space to pray, a plan to read, a fast to keep. Everything here stays on your device.</>}
+      />
     <div className="mx-auto max-w-6xl px-6 py-16">
-      <p className="text-sm text-paper-dim">Resources</p>
-      <h1 className="mt-3 font-display text-4xl text-paper sm:text-5xl">
-        Tools to help you build.
-      </h1>
-      <p className="mt-4 max-w-xl text-paper-dim leading-relaxed">
-        Small tools for the walk — a word for today, a space to pray, a plan to
-        read, a fast to keep. Everything here stays on your device.
-      </p>
 
       <div className="mt-16 space-y-16">
         <Reveal>
@@ -114,5 +112,6 @@ export default function ToolsPage() {
         </Reveal>
       </div>
     </div>
+    </>
   );
 }

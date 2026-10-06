@@ -5,6 +5,15 @@ import { LiveStream } from "@/components/site/live-stream";
 import { MomentsGallery } from "@/components/site/moments-gallery";
 import { NightCity } from "@/components/site/night-city";
 import { WatchClock } from "@/components/site/watch-clock";
+import { Stars } from "@/components/site/stars";
+import { HeroHeadline } from "@/components/site/hero-headline";
+import { Parallax } from "@/components/site/parallax";
+import { ScriptureBand } from "@/components/site/scripture-band";
+import { DailyRhythm } from "@/components/site/daily-rhythm";
+import { Reveal } from "@/components/site/reveal";
+import { VerseOfDay } from "@/components/tools/verse-of-day";
+import { CopyEmail } from "@/components/site/copy-email";
+import { CHANNEL_URL, CHURCH_EMAIL } from "@/lib/schedule";
 
 export const revalidate = 60;
 
@@ -55,21 +64,7 @@ async function getHomeData() {
   };
 }
 
-const rhythms = [
-  {
-    name: "Night Watch",
-    when: "Late at night",
-    body: "We stand watch in prayer and the prophetic word, contending for the season ahead together.",
-    href: "/sermons?series=night-watch",
-    cta: "Watch past Night Watches",
-  },
-  {
-    name: "Morning Prayers",
-    when: "At daybreak",
-    body: "Begin the day anchored in prayer, before the world asks anything of you.",
-    href: "/sermons",
-    cta: "Pray along with a recording",
-  },
+const series = [
   {
     name: "Word for the Month",
     when: "Each new month",
@@ -86,9 +81,28 @@ const rhythms = [
   },
 ];
 
-const stars = [
-  [6, 14], [14, 30], [22, 8], [31, 22], [38, 12], [47, 34], [55, 6], [63, 26],
-  [71, 16], [78, 38], [86, 10], [93, 28], [18, 44], [52, 46], [82, 50], [4, 52],
+const firstWatch = [
+  {
+    title: "Subscribe on YouTube",
+    body: "Every gathering streams on @thecitybuilderscity. Turn on notifications so you know the moment we go live.",
+    href: CHANNEL_URL,
+    cta: "Open the channel",
+    external: true,
+  },
+  {
+    title: "Join a watch",
+    body: "Night Watch is at 11:00 PM and Morning Prayers at 7:00 AM, Lagos time, every day. Come as you are and pray along in the chat.",
+    href: "/events",
+    cta: "See the daily times",
+    external: false,
+  },
+  {
+    title: "Tell us you came",
+    body: "Send a prayer request or write to the team. We'd love to know your name and pray for your season.",
+    href: "/contact",
+    cta: "Say hello",
+    external: false,
+  },
 ];
 
 export default async function HomePage() {
@@ -98,33 +112,31 @@ export default async function HomePage() {
     <>
       {/* Hero: the city at night, keeping watch */}
       <section className="on-night relative overflow-hidden bg-night text-starlight">
-        <svg className="absolute inset-0 h-full w-full" aria-hidden="true">
-          {stars.map(([x, y], i) => (
-            <circle
-              key={i}
-              cx={`${x}%`}
-              cy={`${y}%`}
-              r={i % 3 === 0 ? 1.4 : 0.9}
-              fill="#e9ecf5"
-              opacity={i % 2 === 0 ? 0.7 : 0.4}
-            />
-          ))}
-        </svg>
+        <Stars shooting />
+        {/* the moon over the city */}
+        <div
+          aria-hidden="true"
+          className="hero-rise absolute right-5 top-3 h-11 w-11 rounded-full bg-[#f4e7c6] shadow-[0_0_80px_10px_rgba(244,231,198,0.18)] [animation-delay:200ms] sm:right-[8%] sm:top-8 sm:h-24 sm:w-24 lg:right-[40%] lg:top-14 lg:h-28 lg:w-28"
+        >
+          <span className="absolute left-[22%] top-[30%] h-[18%] w-[18%] rounded-full bg-[#e6d5ad]" />
+          <span className="absolute left-[55%] top-[55%] h-[12%] w-[12%] rounded-full bg-[#e6d5ad]" />
+        </div>
 
         <div className="relative mx-auto grid max-w-6xl gap-12 px-6 pt-16 pb-[clamp(11rem,26vw,22rem)] sm:pt-24 lg:grid-cols-[1fr_auto] lg:items-end">
           <div>
-            <h1 className="max-w-3xl font-display text-[clamp(2.9rem,7.5vw,6.25rem)] leading-[0.98]">
-              A city whose builder and maker is God.
-            </h1>
-            <p className="mt-7 max-w-xl text-lg leading-relaxed text-starlight-dim">
+            <HeroHeadline
+              text="A city whose builder and maker is God."
+              className="max-w-3xl font-display text-[clamp(2.9rem,7.5vw,6.25rem)] leading-[0.98]"
+            />
+            <p className="hero-rise mt-7 max-w-xl [animation-delay:700ms] text-lg leading-relaxed text-starlight-dim">
               The City Builders is Pastor Michael Tomiwa&apos;s ministry of prayer,
               teaching and the prophetic. We help you build strong spiritual
               foundations and understand the season you&apos;re in.
             </p>
-            <div className="mt-9 flex flex-wrap items-center gap-x-6 gap-y-4">
+            <div className="hero-rise mt-9 flex flex-wrap items-center gap-x-6 gap-y-4 [animation-delay:850ms]">
               <a
                 href="#watch"
-                className="inline-flex h-12 items-center bg-lamp px-7 font-medium text-ink transition-colors hover:bg-gold-soft"
+                className="inline-flex h-12 items-center bg-lamp px-7 font-medium text-ink shadow-[0_0_30px_-8px_#f0b44c] transition-all hover:-translate-y-0.5 hover:bg-gold-soft"
               >
                 Join the watch
               </a>
@@ -149,7 +161,9 @@ export default async function HomePage() {
           />
         </div>
 
-        <NightCity className="pointer-events-none absolute inset-x-0 bottom-0 h-[clamp(9rem,24vw,22rem)] w-full" />
+        <Parallax distance={50} className="pointer-events-none absolute inset-x-0 bottom-0">
+          <NightCity className="h-[clamp(9rem,24vw,22rem)] w-full" />
+        </Parallax>
       </section>
 
       {/* The watch: live stream */}
@@ -173,6 +187,8 @@ export default async function HomePage() {
         {/* night gives way to morning */}
         <div className="h-32 bg-gradient-to-b from-night to-midnight sm:h-48" aria-hidden="true" />
       </section>
+
+      <ScriptureBand />
 
       {/* A word from the pastor */}
       <section>
@@ -208,30 +224,72 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* Rhythms of the house */}
+      {/* Daily rhythm */}
       <section className="border-t border-steel">
         <div className="mx-auto max-w-6xl px-6 py-20">
-          <h2 className="font-display text-4xl text-paper sm:text-5xl">How we gather</h2>
-          <ul className="mt-12 border-t border-steel">
-            {rhythms.map((r) => (
-              <li
-                key={r.name}
-                className="grid gap-3 border-b border-steel py-8 md:grid-cols-[1.1fr_0.6fr_1.4fr] md:items-baseline md:gap-10"
-              >
-                <h3 className="font-display text-3xl text-paper">{r.name}</h3>
+          <Reveal>
+            <h2 className="font-display text-4xl text-paper sm:text-5xl">Pray with us every day</h2>
+            <p className="mt-4 max-w-xl leading-relaxed text-paper-dim">
+              Two watches, every day of the week, live on YouTube. The times below
+              are Lagos time; we&apos;ll show yours too.
+            </p>
+          </Reveal>
+          <div className="mt-12">
+            <DailyRhythm />
+          </div>
+
+          <div className="mt-16 grid gap-12 md:grid-cols-2">
+            {series.map((r) => (
+              <Reveal key={r.name}>
                 <p className="text-gold-text">{r.when}</p>
-                <div>
-                  <p className="max-w-md leading-relaxed text-paper-dim">{r.body}</p>
-                  <Link
-                    href={r.href}
-                    className="mt-3 inline-block text-paper underline decoration-gold underline-offset-[5px] hover:text-gold-text"
-                  >
-                    {r.cta}
-                  </Link>
-                </div>
+                <h3 className="mt-2 font-display text-3xl text-paper">{r.name}</h3>
+                <p className="mt-3 max-w-md leading-relaxed text-paper-dim">{r.body}</p>
+                <Link
+                  href={r.href}
+                  className="mt-3 inline-block text-paper underline decoration-gold underline-offset-[5px] hover:text-gold-text"
+                >
+                  {r.cta}
+                </Link>
+              </Reveal>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Your first watch */}
+      <section className="on-night relative overflow-hidden bg-night text-starlight">
+        <Stars />
+        <div className="relative mx-auto max-w-6xl px-6 py-24">
+          <Reveal>
+            <h2 className="max-w-2xl font-display text-4xl leading-tight sm:text-5xl">
+              New here? Your first watch takes three steps.
+            </h2>
+          </Reveal>
+          <ol className="mt-14 grid gap-10 md:grid-cols-3 md:gap-8">
+            {firstWatch.map((step, i) => (
+              <li key={step.title} className="relative border-t border-lamp/50 pt-6">
+                <Reveal delay={i * 0.12}>
+                  <span className="font-display text-6xl leading-none text-lamp">{i + 1}</span>
+                  <h3 className="mt-4 font-display text-2xl">{step.title}</h3>
+                  <p className="mt-3 leading-relaxed text-starlight-dim">{step.body}</p>
+                  {step.external ? (
+                    <a
+                      href={step.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mt-4 inline-block text-lamp underline-offset-4 hover:underline"
+                    >
+                      {step.cta}
+                    </a>
+                  ) : (
+                    <Link href={step.href} className="mt-4 inline-block text-lamp underline-offset-4 hover:underline">
+                      {step.cta}
+                    </Link>
+                  )}
+                </Reveal>
               </li>
             ))}
-          </ul>
+          </ol>
         </div>
       </section>
 
@@ -299,6 +357,13 @@ export default async function HomePage() {
         </section>
       )}
 
+      {/* Today's word */}
+      <section className="border-t border-steel">
+        <Reveal className="mx-auto max-w-4xl px-6 py-24">
+          <VerseOfDay />
+        </Reveal>
+      </section>
+
       {/* Keep building this week */}
       <section className="border-t border-steel">
         <div className="mx-auto grid max-w-6xl gap-12 px-6 py-20 md:grid-cols-3 md:gap-10">
@@ -333,6 +398,33 @@ export default async function HomePage() {
             </Link>
           </div>
         </div>
+      </section>
+
+      {/* Write to us */}
+      <section className="border-t border-steel bg-dusk/60">
+        <Reveal className="mx-auto flex max-w-6xl flex-col gap-8 px-6 py-20 lg:flex-row lg:items-end lg:justify-between">
+          <div>
+            <h2 className="font-display text-4xl text-paper sm:text-5xl">Write to the builders</h2>
+            <p className="mt-4 max-w-lg leading-relaxed text-paper-dim">
+              Questions, testimonies, invitations for Pastor Michael, or just
+              hello. The team reads every message.
+            </p>
+          </div>
+          <div className="lg:text-right">
+            <a
+              href={`mailto:${CHURCH_EMAIL}`}
+              className="block break-all font-display text-2xl text-gold-text underline-offset-[6px] hover:underline sm:text-3xl"
+            >
+              {CHURCH_EMAIL}
+            </a>
+            <div className="mt-3 flex flex-wrap gap-5 text-sm lg:justify-end">
+              <CopyEmail className="text-paper-dim underline underline-offset-4 hover:text-paper" />
+              <Link href="/contact" className="text-paper-dim underline underline-offset-4 hover:text-paper">
+                Use the contact form
+              </Link>
+            </div>
+          </div>
+        </Reveal>
       </section>
     </>
   );

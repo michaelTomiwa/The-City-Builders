@@ -1,4 +1,5 @@
 import { supabase, type GivingLink } from "@/lib/supabase";
+import { PageHero } from "@/components/site/page-hero";
 
 export const revalidate = 60;
 
@@ -11,15 +12,12 @@ export default async function GivePage() {
   const links = (data ?? []) as GivingLink[];
 
   return (
+    <>
+      <PageHero
+        title={<>Give toward the work.</>}
+        intro={<>Every gift helps us keep the watch running, reach more of the city, and equip believers to build on a strong foundation.</>}
+      />
     <div className="mx-auto max-w-2xl px-6 py-16">
-      <p className="text-sm text-paper-dim">Give</p>
-      <h1 className="mt-3 font-display text-4xl text-paper sm:text-5xl">
-        Give toward the work.
-      </h1>
-      <p className="mt-5 text-lg leading-relaxed text-paper-dim">
-        Every gift helps us keep the watch running, reach more of the city, and
-        equip believers to build on a strong foundation.
-      </p>
 
       <div className="mt-10 space-y-4">
         {links.map((link) => (
@@ -48,5 +46,6 @@ export default async function GivePage() {
         and we&apos;ll point you the right way.
       </p>
     </div>
+    </>
   );
 }

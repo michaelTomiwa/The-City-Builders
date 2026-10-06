@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { LogoMark } from "./logo-mark";
+import { CHURCH_EMAIL, services } from "@/lib/schedule";
 
 const footerLinks = [
   { href: "/sermons", label: "The watch" },
@@ -7,6 +8,7 @@ const footerLinks = [
   { href: "/tools", label: "Resources" },
   { href: "/prayer", label: "Prayer wall" },
   { href: "/about", label: "About" },
+  { href: "/contact", label: "Contact" },
   { href: "/give", label: "Give" },
 ];
 
@@ -14,7 +16,7 @@ export function SiteFooter() {
   return (
     <footer className="on-night bg-night text-starlight">
       <div className="mx-auto max-w-6xl px-6 pt-16 pb-10">
-        <div className="grid gap-12 md:grid-cols-[1.4fr_1fr]">
+        <div className="grid gap-12 md:grid-cols-[1fr_1.25fr]">
           <div>
             <LogoMark className="h-11 w-11 text-lamp" />
             <p className="mt-6 max-w-md font-display text-3xl leading-tight">
@@ -27,8 +29,14 @@ export function SiteFooter() {
             <div>
               <p className="text-sm text-starlight-dim">Led by</p>
               <p className="mt-1">Pastor Michael Tomiwa</p>
-              <p className="mt-6 text-sm text-starlight-dim">Gathering</p>
-              <p className="mt-1">In Nigeria and online, worldwide</p>
+              <p className="mt-6 text-sm text-starlight-dim">Every day, Lagos time</p>
+              <ul className="mt-1 space-y-1">
+                {services.map((s) => (
+                  <li key={s.id}>
+                    {s.name}, {s.label}
+                  </li>
+                ))}
+              </ul>
             </div>
             <div>
               <p className="text-sm text-starlight-dim">Watch with us</p>
@@ -39,6 +47,13 @@ export function SiteFooter() {
                 className="mt-1 inline-block text-lamp underline-offset-4 hover:underline"
               >
                 YouTube @thecitybuilderscity
+              </a>
+              <p className="mt-6 text-sm text-starlight-dim">Write to us</p>
+              <a
+                href={`mailto:${CHURCH_EMAIL}`}
+                className="mt-1 inline-block text-lamp underline-offset-4 [overflow-wrap:anywhere] hover:underline"
+              >
+                {CHURCH_EMAIL}
               </a>
             </div>
           </div>

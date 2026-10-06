@@ -1,4 +1,5 @@
 import { supabase } from "@/lib/supabase";
+import { PageHero } from "@/components/site/page-hero";
 import { PrayerForm } from "@/components/site/prayer-form";
 
 export const revalidate = 0;
@@ -30,15 +31,12 @@ export default async function PrayerPage() {
   const prayers = (data ?? []) as PublicPrayer[];
 
   return (
+    <>
+      <PageHero
+        title={<>Bring it to the wall.</>}
+        intro={<>Share what&apos;s on your heart — with your name or without it. Our community prays over every request.</>}
+      />
     <div className="mx-auto max-w-6xl px-6 py-16">
-      <p className="text-sm text-paper-dim">Prayer wall</p>
-      <h1 className="mt-3 font-display text-4xl text-paper sm:text-5xl">
-        Bring it to the wall.
-      </h1>
-      <p className="mt-4 max-w-xl text-paper-dim leading-relaxed">
-        Share what&apos;s on your heart — with your name or without it. Our
-        community prays over every request.
-      </p>
 
       <div className="mt-14 grid gap-16 lg:grid-cols-2">
         <div>
@@ -68,5 +66,6 @@ export default async function PrayerPage() {
         </div>
       </div>
     </div>
+    </>
   );
 }

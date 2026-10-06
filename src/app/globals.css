@@ -120,6 +120,68 @@ body {
   }
 }
 
+.star-twinkle {
+  animation: twinkle 4s ease-in-out infinite;
+}
+
+@keyframes twinkle {
+  0%, 100% { opacity: 0.85; }
+  50% { opacity: 0.15; }
+}
+
+/* A shooting star crosses the sky every twelve seconds or so. */
+.shooting-star {
+  position: absolute;
+  width: 140px;
+  height: 1.5px;
+  background: linear-gradient(90deg, rgba(233, 236, 245, 0.9), rgba(233, 236, 245, 0));
+  transform: rotate(-24deg) translateX(0);
+  opacity: 0;
+  animation: shoot 12s ease-out 3s infinite;
+}
+
+@keyframes shoot {
+  0% { opacity: 0; transform: rotate(-24deg) translateX(0); }
+  2% { opacity: 1; }
+  8% { opacity: 0; transform: rotate(-24deg) translateX(-360px); }
+  100% { opacity: 0; transform: rotate(-24deg) translateX(-360px); }
+}
+
+/* Page titles rise into place once, on load. */
+.hero-rise {
+  opacity: 0;
+  animation: rise 0.9s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@keyframes rise {
+  from { opacity: 0; transform: translateY(18px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* The scripture band drifts slowly; hovering pauses it so it can be read. */
+.marquee {
+  display: flex;
+  width: max-content;
+  animation: marquee 70s linear infinite;
+}
+
+.marquee:hover {
+  animation-play-state: paused;
+}
+
+@keyframes marquee {
+  to { transform: translateX(-50%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shooting-star { display: none; }
+  .marquee { animation: none; flex-wrap: wrap; width: auto; }
+  .marquee > [data-duplicate] { display: none; }
+  .marquee ul { flex-wrap: wrap; row-gap: 1.5rem; padding-inline: 1.5rem; }
+  .marquee span { white-space: normal; }
+  .hero-rise, .window-lit { opacity: 1; }
+}
+
 .prose-sermon {
   max-width: 68ch;
 }
