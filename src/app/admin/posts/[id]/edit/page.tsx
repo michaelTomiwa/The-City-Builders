@@ -11,8 +11,8 @@ export default async function EditPostPage({ params }: PageProps<"/admin/posts/[
   if (!post) notFound();
 
   return (
-    <div className="max-w-2xl">
-      <h1 className="font-display text-3xl text-paper">Edit post</h1>
+    <div>
+      <h1 className="font-display text-4xl text-paper">Edit post</h1>
       <div className="mt-8">
         <PostForm post={post} action={savePost} />
       </div>

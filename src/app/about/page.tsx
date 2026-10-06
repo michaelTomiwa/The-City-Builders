@@ -1,17 +1,17 @@
 import Image from "next/image";
 import { Skyline } from "@/components/site/skyline";
 import { Reveal } from "@/components/site/reveal";
+import { PageHero } from "@/components/site/page-hero";
 
 export default function AboutPage() {
   return (
     <div>
+      <PageHero
+        title="A people under construction."
+        intro="Prayer, teaching and the prophetic, so believers can build strong foundations and understand their season."
+      />
       <div className="mx-auto max-w-3xl px-6 py-16">
-        <p className="text-sm text-paper-dim">About us</p>
-        <h1 className="mt-3 font-display text-4xl text-paper sm:text-5xl">
-          A people under construction.
-        </h1>
-
-        <div className="mt-10 space-y-6 text-lg leading-relaxed text-paper-dim">
+        <div className="space-y-6 text-lg leading-relaxed text-paper-dim">
           <p>
             The City Builders is a faith-based ministry dedicated to nurturing
             spiritual growth, deepening alignment with God, and helping believers

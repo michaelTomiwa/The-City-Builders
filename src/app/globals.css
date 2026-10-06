@@ -2,23 +2,30 @@
 @plugin "tailwindcss-animate";
 
 /*
-  Brand repaint: white + gold, matching the City Builders mark.
-  Token names kept stable (midnight/dusk/paper/steel/gold/violet) so every
-  component that references them repaints automatically — only the raw
-  hex values below changed.
+  "Night watch" palette: lapis night sky above, limestone city below.
+  Token names are kept stable (midnight/dusk/paper/steel/gold/violet) so
+  every page repaints from these values; the night/lamp/starlight tokens
+  are for the dark bands (header, hero, stream, footer).
 */
 :root {
-  --midnight: #faf7f0; /* page background — warm ivory, not stark white */
-  --dusk: #f3ecdc; /* alt section background — soft cream */
-  --dusk-2: #ece1c7; /* deeper cream panel */
-  --violet: #352a1e; /* secondary dark accent (replaces old violet hue) */
-  --gold: #b8862e; /* brand gold — fills, buttons, line art */
-  --gold-soft: #d4a94f; /* lighter gold — hover on gold fills */
-  --gold-text: #8a631c; /* darker bronze — AA-safe gold for body text/links */
-  --paper: #2a2420; /* primary text — warm charcoal, never pure black */
-  --paper-dim: #6b6256; /* secondary/muted text */
-  --steel: #e2d8c3; /* borders, dividers — light warm line */
-  --ink: #1d1813; /* near-black, used only for text on gold fills */
+  --midnight: #f6f6f3; /* page background — limestone */
+  --dusk: #ecedee; /* alt section background — cool stone */
+  --dusk-2: #dfe1e5; /* deeper stone panel */
+  --violet: #9a3b26; /* brick — secondary accent, errors */
+  --gold: #e0a63e; /* lamplight — fills and buttons */
+  --gold-soft: #ecbd63; /* hover on lamplight fills */
+  --gold-text: #8b5a14; /* bronze — AA-safe gold for text on stone */
+  --paper: #18203a; /* primary text — lapis ink */
+  --paper-dim: #545b70; /* secondary text */
+  --steel: #d6d9df; /* borders, dividers */
+  --ink: #111830; /* text on lamplight fills */
+
+  --night: #101c3a; /* lapis night sky */
+  --night-2: #182751; /* raised surfaces on night */
+  --night-3: #233466; /* building silhouettes, lines on night */
+  --lamp: #f0b44c; /* lamplight on night */
+  --starlight: #e9ecf5; /* primary text on night */
+  --starlight-dim: #a9b1c9; /* secondary text on night */
 
   --background: var(--midnight);
   --foreground: var(--paper);
@@ -36,10 +43,16 @@
   --color-paper-dim: var(--paper-dim);
   --color-steel: var(--steel);
   --color-ink: var(--ink);
+  --color-night: var(--night);
+  --color-night-2: var(--night-2);
+  --color-night-3: var(--night-3);
+  --color-lamp: var(--lamp);
+  --color-starlight: var(--starlight);
+  --color-starlight-dim: var(--starlight-dim);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-display: var(--font-fraunces);
-  --font-sans: var(--font-inter);
+  --font-display: var(--font-gloock);
+  --font-sans: var(--font-hanken);
 }
 
 body {
@@ -58,11 +71,16 @@ body {
   outline-offset: 3px;
 }
 
+.on-night :focus-visible {
+  outline-color: var(--lamp);
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
   *::after {
     animation-duration: 0.01ms !important;
+    animation-delay: 0ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
@@ -80,6 +98,208 @@ body {
     stroke-dashoffset: 0;
   }
 }
+
+/* Hero: the city's windows come on one by one as the watch begins. */
+.window-lit {
+  opacity: 0;
+  animation: window-on 0.5s ease-out forwards;
+}
+
+@keyframes window-on {
+  0% {
+    opacity: 0;
+  }
+  60% {
+    opacity: 1;
+  }
+  75% {
+    opacity: 0.7;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+.star-twinkle {
+  animation: twinkle 4s ease-in-out infinite;
+}
+
+@keyframes twinkle {
+  0%, 100% { opacity: 0.85; }
+  50% { opacity: 0.15; }
+}
+
+/* A shooting star crosses the sky every twelve seconds or so. */
+.shooting-star {
+  position: absolute;
+  width: 140px;
+  height: 1.5px;
+  background: linear-gradient(90deg, rgba(233, 236, 245, 0.9), rgba(233, 236, 245, 0));
+  transform: rotate(-24deg) translateX(0);
+  opacity: 0;
+  animation: shoot 12s ease-out 3s infinite;
+}
+
+@keyframes shoot {
+  0% { opacity: 0; transform: rotate(-24deg) translateX(0); }
+  2% { opacity: 1; }
+  8% { opacity: 0; transform: rotate(-24deg) translateX(-360px); }
+  100% { opacity: 0; transform: rotate(-24deg) translateX(-360px); }
+}
+
+/* Page titles rise into place once, on load. */
+.hero-rise {
+  opacity: 0;
+  animation: rise 0.9s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@keyframes rise {
+  from { opacity: 0; transform: translateY(18px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* The scripture band drifts slowly; hovering pauses it so it can be read. */
+.marquee {
+  display: flex;
+  width: max-content;
+  animation: marquee 70s linear infinite;
+}
+
+.marquee:hover {
+  animation-play-state: paused;
+}
+
+@keyframes marquee {
+  to { transform: translateX(-50%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shooting-star { display: none; }
+  .marquee { animation: none; flex-wrap: wrap; width: auto; }
+  .marquee > [data-duplicate] { display: none; }
+  .marquee ul { flex-wrap: wrap; row-gap: 1.5rem; padding-inline: 1.5rem; }
+  .marquee span { white-space: normal; }
+  .hero-rise, .window-lit { opacity: 1; }
+}
+
+/*
+  The sky. .sky sections (home hero, page banners) follow Lagos time via
+  html[data-sky], which applySky() sets. Night is the default.
+*/
+.sky {
+  --sky-top: #0d1834;
+  --sky-bottom: #1b2a58;
+  --city-back: #1a2a57;
+  --city-front: #0b1531;
+  --city-crane: #2c3f78;
+  --window-on: #f0b44c;
+  --window-off: #16244a;
+  --glow-opacity: 1;
+  --stars-opacity: 1;
+  background: linear-gradient(180deg, var(--sky-top) 0%, var(--sky-bottom) 100%);
+  transition: background 1.5s ease;
+}
+
+html[data-sky="dawn"] .sky {
+  --sky-top: #27336b;
+  --sky-bottom: #f0a06a;
+  --city-back: #3a3c6e;
+  --city-front: #1b1f42;
+  --city-crane: #4b4f86;
+  --window-off: #2b2f5a;
+  --stars-opacity: 0.35;
+}
+
+html[data-sky="dusk"] .sky {
+  --sky-top: #1f2a5c;
+  --sky-bottom: #ec8a58;
+  --city-back: #3a3466;
+  --city-front: #1a1a3c;
+  --city-crane: #4a4580;
+  --window-off: #2a2852;
+  --stars-opacity: 0.4;
+}
+
+html[data-sky="day"] .sky {
+  --sky-top: #4f97d6;
+  --sky-bottom: #cfe7f6;
+  --city-back: #9fb7d8;
+  --city-front: #4e6390;
+  --city-crane: #7088b3;
+  --window-on: #a8c6e6;
+  --window-off: #8ba7cf;
+  --glow-opacity: 0;
+  --stars-opacity: 0;
+  /* the hero's text turns to ink against a daylight sky */
+  --starlight: #10203f;
+  --starlight-dim: #2a3d63;
+  --night-2: #ffffff;
+  --night-3: #a9c2e0;
+  --lamp: #8b4f0a;
+}
+
+.sky .city-back { fill: var(--city-back); transition: fill 1.5s ease; }
+.sky .city-front { fill: var(--city-front); transition: fill 1.5s ease; }
+.sky .city-crane { stroke: var(--city-crane); }
+.sky .city-crane-fill { fill: var(--city-crane); }
+.sky .window-lit { fill: var(--window-on); }
+.sky .window-off { fill: var(--window-off); }
+.sky .horizon-glow { opacity: var(--glow-opacity); transition: opacity 1.5s ease; }
+.sky .star-field { opacity: var(--stars-opacity); transition: opacity 1.5s ease; }
+html[data-sky="day"] .shooting-star,
+html[data-sky="dawn"] .shooting-star,
+html[data-sky="dusk"] .shooting-star { display: none; }
+
+.celestial {
+  position: absolute;
+  left: var(--sun-x, 70%);
+  top: var(--sun-y, 20%);
+  transform: translate(-50%, -50%);
+  transition: left 60s linear, top 60s linear, opacity 1.5s ease;
+}
+
+.celestial.moon {
+  left: var(--moon-x, 70%);
+  top: var(--moon-y, 18%);
+}
+
+.sun { opacity: 0; width: clamp(3.25rem, 7vw, 6rem); aspect-ratio: 1; }
+.sun-disc {
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  background: radial-gradient(circle at 40% 40%, #fff6d6, #ffd36b 55%, #f6a93b);
+}
+.sun-glow {
+  position: absolute;
+  inset: -60%;
+  border-radius: 9999px;
+  background: radial-gradient(circle, rgba(255, 214, 120, 0.55), rgba(255, 214, 120, 0) 65%);
+  animation: sun-breathe 6s ease-in-out infinite;
+}
+@keyframes sun-breathe {
+  0%, 100% { transform: scale(1); opacity: 0.9; }
+  50% { transform: scale(1.12); opacity: 1; }
+}
+html[data-sky="day"] .sun,
+html[data-sky="dawn"] .sun,
+html[data-sky="dusk"] .sun { opacity: 1; }
+html[data-sky="dawn"] .sun-disc,
+html[data-sky="dusk"] .sun-disc {
+  background: radial-gradient(circle at 40% 40%, #ffe3b0, #ff9a52 60%, #e8653a);
+}
+
+.moon { width: clamp(2.75rem, 6vw, 5.5rem); aspect-ratio: 1; opacity: 1; }
+.moon-disc {
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  background: #f4e7c6;
+  box-shadow: 0 0 80px 10px rgba(244, 231, 198, 0.18);
+}
+html[data-sky="day"] .moon { opacity: 0; }
+html[data-sky="dawn"] .moon,
+html[data-sky="dusk"] .moon { opacity: 0.45; }
 
 .prose-sermon {
   max-width: 68ch;

@@ -1,14 +1,8 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase-server";
 import { LogoMark } from "@/components/site/logo-mark";
+import { AdminNav } from "@/components/admin/admin-nav";
 import { signOut } from "./actions";
-
-const navItems = [
-  { href: "/admin", label: "Posts" },
-  { href: "/admin/posts/new", label: "New post" },
-  { href: "/admin/pages", label: "Pages" },
-  { href: "/admin/pages/new", label: "New page" },
-];
 
 export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
   const supabase = await createClient();
@@ -18,37 +12,72 @@ export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
 
   if (!user) return children;
 
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role, full_name")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  if (!profile || profile.role === "member") {
+    return (
+      <div className="mx-auto max-w-lg px-6 py-24">
+        <LogoMark className="h-10 w-10 text-gold" />
+        <h1 className="mt-6 font-display text-3xl text-paper">Access pending</h1>
+        <p className="mt-3 leading-relaxed text-paper-dim">
+          You&apos;re signed in as {user.email}, but this account can&apos;t edit the site yet. Ask an
+          existing admin to set your role to &ldquo;admin&rdquo; or &ldquo;author&rdquo;.
+        </p>
+        <form action={signOut} className="mt-6">
+          <button className="text-gold-text underline underline-offset-4">Sign out</button>
+        </form>
+      </div>
+    );
+  }
+
+  const [{ count: pendingComments }, { count: newPrayers }] = await Promise.all([
+    supabase.from("post_comments").select("id", { count: "exact", head: true }).eq("approved", false),
+    supabase.from("prayer_requests").select("id", { count: "exact", head: true }).eq("status", "new"),
+  ]);
+
   return (
-    <div className="min-h-screen bg-midnight md:flex">
-      <aside className="flex shrink-0 flex-col justify-between border-b border-steel/60 px-6 py-6 md:w-56 md:border-b-0 md:border-r md:px-5 md:py-8">
-        <div>
+    <div className="min-h-screen bg-[#f1f2f4] lg:flex">
+      <aside className="on-night flex shrink-0 flex-col bg-night text-starlight lg:sticky lg:top-0 lg:h-screen lg:w-64">
+        <div className="flex items-center justify-between px-5 py-5 lg:block">
           <Link href="/admin" className="flex items-center gap-2.5">
-            <LogoMark className="h-7 w-7 text-gold" />
-            <span className="font-display text-lg text-paper">Admin</span>
+            <LogoMark className="h-8 w-8 text-lamp" />
+            <span>
+              <span className="block font-display text-lg leading-none">City Builders</span>
+              <span className="text-xs text-starlight-dim">Admin</span>
+            </span>
           </Link>
-          <nav className="mt-10 flex flex-row flex-wrap gap-x-5 gap-y-2 text-sm md:flex-col md:gap-2">
-            {navItems.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className="text-paper-dim transition-colors hover:text-gold-text"
-              >
-                {item.label}
-              </Link>
-            ))}
-          </nav>
+          <div className="flex gap-4 text-sm lg:hidden">
+            <Link href="/" className="text-starlight-dim hover:text-lamp">
+              View site
+            </Link>
+            <form action={signOut}>
+              <button className="text-starlight-dim hover:text-lamp">Sign out</button>
+            </form>
+          </div>
         </div>
 
-        <div className="mt-8 flex flex-col gap-2 text-sm md:mt-0">
-          <Link href="/" className="text-paper-dim hover:text-gold-text">
-            View site
-          </Link>
-          <form action={signOut}>
-            <button className="text-paper-dim hover:text-gold-text">Sign out</button>
-          </form>
+        <AdminNav counts={{ comments: pendingComments ?? 0, prayers: newPrayers ?? 0 }} />
+
+        <div className="mt-auto hidden border-t border-night-3 px-5 py-5 text-sm lg:block">
+          <p className="truncate text-starlight">{profile.full_name ?? user.email}</p>
+          <p className="text-xs capitalize text-starlight-dim">{profile.role}</p>
+          <div className="mt-4 flex gap-4">
+            <Link href="/" className="text-starlight-dim hover:text-lamp">
+              View site
+            </Link>
+            <form action={signOut}>
+              <button className="text-starlight-dim hover:text-lamp">Sign out</button>
+            </form>
+          </div>
         </div>
       </aside>
-      <main className="mx-auto w-full max-w-4xl px-6 py-12">{children}</main>
+      <main className="w-full min-w-0 px-5 py-10 sm:px-8 lg:px-12">
+        <div className="mx-auto max-w-5xl">{children}</div>
+      </main>
     </div>
   );
 }

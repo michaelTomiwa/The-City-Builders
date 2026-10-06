@@ -1,19 +1,23 @@
 import type { Metadata } from "next";
-import { Fraunces, Inter } from "next/font/google";
+import { Gloock, Hanken_Grotesk } from "next/font/google";
 import "./globals.css";
 import { SiteHeader } from "@/components/site/site-header";
 import { SiteFooter } from "@/components/site/site-footer";
 import { MotionProvider } from "@/components/site/motion-provider";
-import { supabase } from "@/lib/supabase";
+import { supabase, type SiteSettings } from "@/lib/supabase";
+import { PublicOnly } from "@/components/site/public-only";
+import { AnnouncementBar } from "@/components/site/announcement-bar";
+import { skyScript } from "@/lib/sky";
+import { SkyClock } from "@/components/site/sky-clock";
 
-const fraunces = Fraunces({
-  variable: "--font-fraunces",
+const gloock = Gloock({
+  variable: "--font-gloock",
   subsets: ["latin"],
-  axes: ["opsz", "SOFT", "WONK"],
+  weight: "400",
 });
 
-const inter = Inter({
-  variable: "--font-inter",
+const hanken = Hanken_Grotesk({
+  variable: "--font-hanken",
   subsets: ["latin"],
 });
 
@@ -37,19 +41,35 @@ async function getNavPages() {
   }));
 }
 
+async function getSettings() {
+  const { data } = await supabase.from("site_settings").select("*").eq("id", 1).maybeSingle();
+  return (data ?? null) as SiteSettings | null;
+}
+
 export default async function RootLayout({ children }: LayoutProps<"/">) {
-  const navPages = await getNavPages();
+  const [navPages, settings] = await Promise.all([getNavPages(), getSettings()]);
 
   return (
     <html
       lang="en"
-      className={`${fraunces.variable} ${inter.variable} h-full antialiased`}
+      className={`${gloock.variable} ${hanken.variable} h-full antialiased`}
+      data-sky="night"
+      suppressHydrationWarning
     >
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: skyScript }} />
+      </head>
       <body className="min-h-full flex flex-col bg-midnight text-paper">
         <MotionProvider>
-          <SiteHeader extraLinks={navPages} />
+          <SkyClock />
+          <PublicOnly>
+            <AnnouncementBar settings={settings} />
+            <SiteHeader extraLinks={navPages} />
+          </PublicOnly>
           <main className="flex-1">{children}</main>
-          <SiteFooter />
+          <PublicOnly>
+            <SiteFooter />
+          </PublicOnly>
         </MotionProvider>
       </body>
     </html>

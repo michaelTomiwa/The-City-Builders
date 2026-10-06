@@ -48,6 +48,27 @@ export type Post = {
   published: boolean;
   published_at: string | null;
   created_at: string;
+  views?: number;
+  likes?: number;
+  tags?: string[];
+  featured?: boolean;
+  updated_at?: string;
+};
+
+export type PostComment = {
+  id: string;
+  post_id: string;
+  name: string;
+  body: string;
+  approved: boolean;
+  created_at: string;
+};
+
+export type SiteSettings = {
+  id: number;
+  announcement: string | null;
+  announcement_link: string | null;
+  announcement_active: boolean;
 };
 
 export type ChurchEvent = {

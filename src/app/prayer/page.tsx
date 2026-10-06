@@ -1,5 +1,7 @@
 import { supabase } from "@/lib/supabase";
+import { PageHero } from "@/components/site/page-hero";
 import { PrayerForm } from "@/components/site/prayer-form";
+import { PrayedButton } from "@/components/site/prayed-button";
 
 export const revalidate = 0;
 
@@ -7,6 +9,7 @@ type PublicPrayer = {
   id: string;
   name: string | null;
   request: string;
+  prayed_count: number;
   created_at: string;
 };
 
@@ -22,7 +25,7 @@ function timeAgo(iso: string) {
 export default async function PrayerPage() {
   const { data } = await supabase
     .from("prayer_requests")
-    .select("id,name,request,created_at")
+    .select("id,name,request,prayed_count,created_at")
     .eq("is_public", true)
     .order("created_at", { ascending: false })
     .limit(30);
@@ -30,15 +33,12 @@ export default async function PrayerPage() {
   const prayers = (data ?? []) as PublicPrayer[];
 
   return (
+    <>
+      <PageHero
+        title={<>Bring it to the wall.</>}
+        intro={<>Share what&apos;s on your heart — with your name or without it. Our community prays over every request.</>}
+      />
     <div className="mx-auto max-w-6xl px-6 py-16">
-      <p className="text-sm text-paper-dim">Prayer wall</p>
-      <h1 className="mt-3 font-display text-4xl text-paper sm:text-5xl">
-        Bring it to the wall.
-      </h1>
-      <p className="mt-4 max-w-xl text-paper-dim leading-relaxed">
-        Share what&apos;s on your heart — with your name or without it. Our
-        community prays over every request.
-      </p>
 
       <div className="mt-14 grid gap-16 lg:grid-cols-2">
         <div>
@@ -54,9 +54,12 @@ export default async function PrayerPage() {
             {prayers.map((p) => (
               <li key={p.id} className="border-t border-steel/60 pt-4">
                 <p className="text-paper leading-relaxed">{p.request}</p>
-                <p className="mt-2 text-xs text-paper-dim">
-                  {p.name || "Anonymous"} · {timeAgo(p.created_at)}
-                </p>
+                <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
+                  <p className="text-xs text-paper-dim">
+                    {p.name || "Anonymous"}, {timeAgo(p.created_at)}
+                  </p>
+                  <PrayedButton id={p.id} initial={p.prayed_count ?? 0} />
+                </div>
               </li>
             ))}
             {prayers.length === 0 && (
@@ -68,5 +71,6 @@ export default async function PrayerPage() {
         </div>
       </div>
     </div>
+    </>
   );
 }

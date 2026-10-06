@@ -1,75 +1,199 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase-server";
-import { deletePost } from "./actions";
+import { Panel, Pill } from "@/components/admin/ui";
+import { compact } from "@/lib/blog";
+
+function lagos(iso: string) {
+  return new Date(iso).toLocaleString("en-US", {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    timeZone: "Africa/Lagos",
+  });
+}
+
+function greeting() {
+  const hour = (new Date().getUTCHours() + 1) % 24;
+  if (hour < 12) return "Good morning";
+  if (hour < 17) return "Good afternoon";
+  return "Good evening";
+}
 
 export default async function AdminDashboard() {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const now = new Date().toISOString();
 
-  if (!user) return null;
+  const [posts, comments, prayers, subscribers, events, sermons] = await Promise.all([
+    supabase.from("posts").select("id, title, slug, views, likes, published, published_at").order("views", { ascending: false }),
+    supabase
+      .from("post_comments")
+      .select("id, name, body, created_at, approved, posts(title, slug)")
+      .order("created_at", { ascending: false })
+      .limit(5),
+    supabase.from("prayer_requests").select("id, name, request, status, created_at").order("created_at", { ascending: false }).limit(5),
+    supabase.from("subscribers").select("id", { count: "exact", head: true }),
+    supabase.from("events").select("id, title, starts_at").gte("starts_at", now).order("starts_at").limit(3),
+    supabase.from("sermons").select("id", { count: "exact", head: true }),
+  ]);
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .maybeSingle();
+  const postRows = posts.data ?? [];
+  const totalReads = postRows.reduce((n, p) => n + (p.views ?? 0), 0);
+  const totalAmens = postRows.reduce((n, p) => n + (p.likes ?? 0), 0);
+  const drafts = postRows.filter((p) => !p.published).length;
+  const scheduled = postRows.filter((p) => p.published && p.published_at && p.published_at > now).length;
+  const pendingComments = (comments.data ?? []).filter((c) => !c.approved).length;
+  const newPrayers = (prayers.data ?? []).filter((p) => p.status === "new").length;
+  const maxViews = Math.max(1, ...postRows.map((p) => p.views ?? 0));
 
-  if (!profile || profile.role === "member") {
-    return (
-      <div className="border-l-2 border-gold pl-6">
-        <h1 className="font-display text-2xl text-paper">Access pending</h1>
-        <p className="mt-3 max-w-md text-paper-dim leading-relaxed">
-          Your account ({user.email}) is signed in but not yet approved to
-          publish. Ask the site owner to set your role to &ldquo;admin&rdquo; or
-          &ldquo;author&rdquo; in Supabase.
-        </p>
-      </div>
-    );
-  }
+  const stats = [
+    { label: "Blog reads", value: compact(totalReads), href: "/admin/posts" },
+    { label: "Amens", value: compact(totalAmens), href: "/admin/posts" },
+    { label: "Subscribers", value: compact(subscribers.count ?? 0), href: "/admin/subscribers" },
+    { label: "Sermons", value: compact(sermons.count ?? 0), href: "/admin/sermons" },
+  ];
 
-  const { data: posts } = await supabase
-    .from("posts")
-    .select("id, title, slug, published, published_at, created_at")
-    .order("created_at", { ascending: false });
+  const quick = [
+    { href: "/admin/posts/new", label: "Write a post" },
+    { href: "/admin/sermons/new", label: "Add a sermon" },
+    { href: "/admin/events/new", label: "Schedule an event" },
+    { href: "/admin/settings", label: "Post an announcement" },
+  ];
 
   return (
     <div>
-      <div className="flex items-center justify-between">
-        <h1 className="font-display text-3xl text-paper">Blog posts</h1>
-        <Link
-          href="/admin/posts/new"
-          className="rounded-sm bg-gold px-5 py-2 text-sm font-medium text-ink hover:bg-gold-soft"
-        >
-          New post
-        </Link>
+      <h1 className="font-display text-4xl text-paper">{greeting()}.</h1>
+      <p className="mt-2 text-paper-dim">
+        {pendingComments + newPrayers === 0
+          ? "Nothing is waiting on you right now."
+          : `${pendingComments ? `${pendingComments} comment${pendingComments === 1 ? "" : "s"} to review` : ""}${
+              pendingComments && newPrayers ? " and " : ""
+            }${newPrayers ? `${newPrayers} new prayer request${newPrayers === 1 ? "" : "s"}` : ""}.`}
+      </p>
+
+      <div className="mt-8 flex flex-wrap gap-2">
+        {quick.map((q) => (
+          <Link
+            key={q.href}
+            href={q.href}
+            className="rounded-full border border-steel bg-white px-4 py-2 text-sm text-paper transition-colors hover:border-gold hover:text-gold-text"
+          >
+            {q.label}
+          </Link>
+        ))}
       </div>
 
-      <ul className="mt-10 divide-y divide-steel/60">
-        {(posts ?? []).map((post) => (
-          <li key={post.id} className="flex items-center justify-between py-4">
-            <div>
-              <p className="text-paper">{post.title}</p>
-              <p className="mt-1 text-xs text-paper-dim">
-                {post.published ? "Published" : "Draft"} · /blog/{post.slug}
-              </p>
-            </div>
-            <div className="flex items-center gap-4 text-sm">
-              <Link href={`/admin/posts/${post.id}/edit`} className="text-gold-text hover:text-ink">
-                Edit
-              </Link>
-              <form action={deletePost}>
-                <input type="hidden" name="id" value={post.id} />
-                <button className="text-paper-dim hover:text-violet">Delete</button>
-              </form>
-            </div>
-          </li>
+      <dl className="mt-10 grid grid-cols-2 gap-4 lg:grid-cols-4">
+        {stats.map((s) => (
+          <Link key={s.label} href={s.href} className="rounded-md border border-steel bg-white/70 p-5 transition-colors hover:border-gold">
+            <dt className="text-sm text-paper-dim">{s.label}</dt>
+            <dd className="mt-1 font-display text-4xl text-paper">{s.value}</dd>
+          </Link>
         ))}
-        {(posts ?? []).length === 0 && (
-          <li className="py-12 text-paper-dim">No posts yet — create the first one.</li>
-        )}
-      </ul>
+      </dl>
+
+      <div className="mt-8 grid gap-6 lg:grid-cols-[1.4fr_1fr]">
+        <Panel>
+          <div className="flex items-baseline justify-between">
+            <h2 className="font-display text-2xl text-paper">Most-read posts</h2>
+            <span className="text-sm text-paper-dim">
+              {drafts} draft{drafts === 1 ? "" : "s"}
+              {scheduled > 0 && `, ${scheduled} scheduled`}
+            </span>
+          </div>
+          {postRows.length === 0 ? (
+            <p className="mt-4 text-paper-dim">No posts yet.</p>
+          ) : (
+            <ol className="mt-5 space-y-4">
+              {postRows.slice(0, 6).map((p) => (
+                <li key={p.id}>
+                  <div className="flex items-baseline justify-between gap-4 text-sm">
+                    <Link href={`/admin/posts/${p.id}/edit`} className="truncate text-paper hover:text-gold-text">
+                      {p.title}
+                    </Link>
+                    <span className="shrink-0 tabular-nums text-paper-dim">{compact(p.views ?? 0)} reads</span>
+                  </div>
+                  <div className="mt-1.5 h-1.5 rounded-full bg-dusk-2">
+                    <div className="h-full rounded-full bg-gold" style={{ width: `${((p.views ?? 0) / maxViews) * 100}%` }} />
+                  </div>
+                </li>
+              ))}
+            </ol>
+          )}
+        </Panel>
+
+        <Panel>
+          <h2 className="font-display text-2xl text-paper">Coming up</h2>
+          <ul className="mt-4 space-y-3 text-sm">
+            <li className="flex justify-between gap-3">
+              <span className="text-paper">Night Watch</span>
+              <span className="text-paper-dim">Daily, 11:00 PM</span>
+            </li>
+            <li className="flex justify-between gap-3">
+              <span className="text-paper">Morning Prayers</span>
+              <span className="text-paper-dim">Daily, 7:00 AM</span>
+            </li>
+            {(events.data ?? []).map((e) => (
+              <li key={e.id} className="flex justify-between gap-3 border-t border-steel pt-3">
+                <span className="text-paper">{e.title}</span>
+                <span className="shrink-0 text-paper-dim">{lagos(e.starts_at)}</span>
+              </li>
+            ))}
+          </ul>
+          <Link href="/admin/events/new" className="mt-5 inline-block text-sm text-gold-text underline underline-offset-4">
+            Add a special event
+          </Link>
+        </Panel>
+      </div>
+
+      <div className="mt-6 grid gap-6 lg:grid-cols-2">
+        <Panel>
+          <div className="flex items-baseline justify-between">
+            <h2 className="font-display text-2xl text-paper">Latest comments</h2>
+            <Link href="/admin/comments" className="text-sm text-gold-text">
+              Moderate
+            </Link>
+          </div>
+          <ul className="mt-4 divide-y divide-steel">
+            {(comments.data ?? []).map((c) => {
+              const post = Array.isArray(c.posts) ? c.posts[0] : c.posts;
+              return (
+                <li key={c.id} className="py-3 text-sm">
+                  <p className="flex items-center gap-2">
+                    <span className="font-medium text-paper">{c.name}</span>
+                    {!c.approved && <Pill tone="gold">Waiting</Pill>}
+                  </p>
+                  <p className="mt-1 line-clamp-2 text-paper-dim">{c.body}</p>
+                  {post && <p className="mt-1 text-xs text-paper-dim">on {post.title}</p>}
+                </li>
+              );
+            })}
+            {(comments.data ?? []).length === 0 && <li className="py-3 text-sm text-paper-dim">No comments yet.</li>}
+          </ul>
+        </Panel>
+
+        <Panel>
+          <div className="flex items-baseline justify-between">
+            <h2 className="font-display text-2xl text-paper">Prayer requests</h2>
+            <Link href="/admin/prayers" className="text-sm text-gold-text">
+              Open inbox
+            </Link>
+          </div>
+          <ul className="mt-4 divide-y divide-steel">
+            {(prayers.data ?? []).map((p) => (
+              <li key={p.id} className="py-3 text-sm">
+                <p className="flex items-center gap-2">
+                  <span className="font-medium text-paper">{p.name ?? "Anonymous"}</span>
+                  {p.status === "new" && <Pill tone="blue">New</Pill>}
+                </p>
+                <p className="mt-1 line-clamp-2 text-paper-dim">{p.request}</p>
+              </li>
+            ))}
+            {(prayers.data ?? []).length === 0 && <li className="py-3 text-sm text-paper-dim">No requests yet.</li>}
+          </ul>
+        </Panel>
+      </div>
     </div>
   );
 }
