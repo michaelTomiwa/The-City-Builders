@@ -11,15 +11,15 @@ export function LiveStream() {
     <div>
       <div className="flex items-center gap-2">
         <motion.span
-          className="h-2 w-2 rounded-full bg-violet"
+          className="h-2 w-2 rounded-full bg-[#e55a3c]"
           animate={{ opacity: [1, 0.3, 1] }}
           transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
         />
-        <p className="text-sm text-paper-dim">
+        <p className="text-sm text-starlight-dim">
           Live automatically when we&apos;re streaming
         </p>
       </div>
-      <div className="mt-5 aspect-video w-full overflow-hidden rounded-sm border border-steel">
+      <div className="mt-5 aspect-video w-full overflow-hidden border border-night-3 bg-night-2">
         <iframe
           className="h-full w-full"
           src={`https://www.youtube.com/embed/live_stream?channel=${CHANNEL_ID}`}
@@ -28,13 +28,13 @@ export function LiveStream() {
           allowFullScreen
         />
       </div>
-      <p className="mt-3 text-sm text-paper-dim">
-        Nothing playing above? We&apos;re not live right now —{" "}
+      <p className="mt-3 text-sm text-starlight-dim">
+        Nothing playing above? We&apos;re not live right now. You can{" "}
         <a
           href={`https://www.youtube.com/watch?v=${LATEST_VIDEO_ID}`}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-gold-text hover:text-ink"
+          className="text-lamp underline-offset-4 hover:underline"
         >
           watch our last broadcast
         </a>{" "}
@@ -43,7 +43,7 @@ export function LiveStream() {
           href={CHANNEL_URL}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-gold-text hover:text-ink"
+          className="text-lamp underline-offset-4 hover:underline"
         >
           full schedule
         </a>

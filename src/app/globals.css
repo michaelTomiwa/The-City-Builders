@@ -2,23 +2,30 @@
 @plugin "tailwindcss-animate";
 
 /*
-  Brand repaint: white + gold, matching the City Builders mark.
-  Token names kept stable (midnight/dusk/paper/steel/gold/violet) so every
-  component that references them repaints automatically — only the raw
-  hex values below changed.
+  "Night watch" palette: lapis night sky above, limestone city below.
+  Token names are kept stable (midnight/dusk/paper/steel/gold/violet) so
+  every page repaints from these values; the night/lamp/starlight tokens
+  are for the dark bands (header, hero, stream, footer).
 */
 :root {
-  --midnight: #faf7f0; /* page background — warm ivory, not stark white */
-  --dusk: #f3ecdc; /* alt section background — soft cream */
-  --dusk-2: #ece1c7; /* deeper cream panel */
-  --violet: #352a1e; /* secondary dark accent (replaces old violet hue) */
-  --gold: #b8862e; /* brand gold — fills, buttons, line art */
-  --gold-soft: #d4a94f; /* lighter gold — hover on gold fills */
-  --gold-text: #8a631c; /* darker bronze — AA-safe gold for body text/links */
-  --paper: #2a2420; /* primary text — warm charcoal, never pure black */
-  --paper-dim: #6b6256; /* secondary/muted text */
-  --steel: #e2d8c3; /* borders, dividers — light warm line */
-  --ink: #1d1813; /* near-black, used only for text on gold fills */
+  --midnight: #f6f6f3; /* page background — limestone */
+  --dusk: #ecedee; /* alt section background — cool stone */
+  --dusk-2: #dfe1e5; /* deeper stone panel */
+  --violet: #9a3b26; /* brick — secondary accent, errors */
+  --gold: #e0a63e; /* lamplight — fills and buttons */
+  --gold-soft: #ecbd63; /* hover on lamplight fills */
+  --gold-text: #8b5a14; /* bronze — AA-safe gold for text on stone */
+  --paper: #18203a; /* primary text — lapis ink */
+  --paper-dim: #545b70; /* secondary text */
+  --steel: #d6d9df; /* borders, dividers */
+  --ink: #111830; /* text on lamplight fills */
+
+  --night: #101c3a; /* lapis night sky */
+  --night-2: #182751; /* raised surfaces on night */
+  --night-3: #233466; /* building silhouettes, lines on night */
+  --lamp: #f0b44c; /* lamplight on night */
+  --starlight: #e9ecf5; /* primary text on night */
+  --starlight-dim: #a9b1c9; /* secondary text on night */
 
   --background: var(--midnight);
   --foreground: var(--paper);
@@ -36,10 +43,16 @@
   --color-paper-dim: var(--paper-dim);
   --color-steel: var(--steel);
   --color-ink: var(--ink);
+  --color-night: var(--night);
+  --color-night-2: var(--night-2);
+  --color-night-3: var(--night-3);
+  --color-lamp: var(--lamp);
+  --color-starlight: var(--starlight);
+  --color-starlight-dim: var(--starlight-dim);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-display: var(--font-fraunces);
-  --font-sans: var(--font-inter);
+  --font-display: var(--font-gloock);
+  --font-sans: var(--font-hanken);
 }
 
 body {
@@ -58,11 +71,16 @@ body {
   outline-offset: 3px;
 }
 
+.on-night :focus-visible {
+  outline-color: var(--lamp);
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
   *::after {
     animation-duration: 0.01ms !important;
+    animation-delay: 0ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
@@ -78,6 +96,27 @@ body {
 @keyframes draw-skyline {
   to {
     stroke-dashoffset: 0;
+  }
+}
+
+/* Hero: the city's windows come on one by one as the watch begins. */
+.window-lit {
+  opacity: 0;
+  animation: window-on 0.5s ease-out forwards;
+}
+
+@keyframes window-on {
+  0% {
+    opacity: 0;
+  }
+  60% {
+    opacity: 1;
+  }
+  75% {
+    opacity: 0.7;
+  }
+  100% {
+    opacity: 1;
   }
 }
 

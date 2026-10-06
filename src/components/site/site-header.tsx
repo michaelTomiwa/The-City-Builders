@@ -24,11 +24,11 @@ export function SiteHeader({
   const links = [...baseLinks, ...extraLinks];
 
   return (
-    <header className="sticky top-0 z-40 border-b border-steel/60 bg-midnight/90 backdrop-blur">
+    <header className="on-night sticky top-0 z-40 border-b border-night-3/70 bg-night/95 backdrop-blur">
       <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
         <Link href="/" className="flex items-center gap-2.5">
-          <LogoMark className="h-9 w-9 text-gold" />
-          <span className="font-display text-xl tracking-tight text-paper">
+          <LogoMark className="h-9 w-9 text-lamp" />
+          <span className="font-display text-xl text-starlight">
             City Builders
           </span>
         </Link>
@@ -38,7 +38,7 @@ export function SiteHeader({
             <Link
               key={link.href}
               href={link.href}
-              className="text-sm text-paper-dim transition-colors hover:text-gold-text"
+              className="text-sm text-starlight-dim transition-colors hover:text-lamp"
             >
               {link.label}
             </Link>
@@ -52,7 +52,7 @@ export function SiteHeader({
         </nav>
 
         <button
-          className="flex h-9 w-9 items-center justify-center text-paper md:hidden"
+          className="flex h-9 w-9 items-center justify-center text-starlight md:hidden"
           onClick={() => setOpen((v) => !v)}
           aria-expanded={open}
           aria-label="Toggle menu"
@@ -60,19 +60,19 @@ export function SiteHeader({
           <span className="relative block h-4 w-5">
             <span
               className={cn(
-                "absolute left-0 top-0 h-px w-5 bg-paper transition-transform",
+                "absolute left-0 top-0 h-px w-5 bg-starlight transition-transform",
                 open && "translate-y-2 rotate-45"
               )}
             />
             <span
               className={cn(
-                "absolute left-0 top-2 h-px w-5 bg-paper transition-opacity",
+                "absolute left-0 top-2 h-px w-5 bg-starlight transition-opacity",
                 open && "opacity-0"
               )}
             />
             <span
               className={cn(
-                "absolute left-0 top-4 h-px w-5 bg-paper transition-transform",
+                "absolute left-0 top-4 h-px w-5 bg-starlight transition-transform",
                 open && "-translate-y-2 -rotate-45"
               )}
             />
@@ -87,7 +87,7 @@ export function SiteHeader({
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
-            className="flex flex-col gap-1 overflow-hidden border-t border-steel/60 px-6 md:hidden"
+            className="flex flex-col gap-1 overflow-hidden border-t border-night-3/70 px-6 md:hidden"
           >
             <div className="flex flex-col gap-1 pb-6 pt-2">
               {links.map((link, i) => (
@@ -99,7 +99,7 @@ export function SiteHeader({
                 >
                   <Link
                     href={link.href}
-                    className="block py-2 text-paper-dim hover:text-gold-text"
+                    className="block py-2 text-starlight-dim hover:text-lamp"
                     onClick={() => setOpen(false)}
                   >
                     {link.label}

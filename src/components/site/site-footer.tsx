@@ -1,53 +1,57 @@
 import Link from "next/link";
 import { LogoMark } from "./logo-mark";
 
+const footerLinks = [
+  { href: "/sermons", label: "The watch" },
+  { href: "/events", label: "Gatherings" },
+  { href: "/tools", label: "Resources" },
+  { href: "/prayer", label: "Prayer wall" },
+  { href: "/about", label: "About" },
+  { href: "/give", label: "Give" },
+];
+
 export function SiteFooter() {
   return (
-    <footer className="border-t border-steel/60 bg-dusk/40">
-      <div className="mx-auto max-w-6xl px-6 py-14">
-        <LogoMark className="h-10 w-10 text-gold" />
-        <p className="mt-5 font-display text-2xl text-paper">
-          A city whose builder and maker is God.
-        </p>
-        <p className="mt-1 text-sm text-paper-dim">Hebrews 11:10</p>
+    <footer className="on-night bg-night text-starlight">
+      <div className="mx-auto max-w-6xl px-6 pt-16 pb-10">
+        <div className="grid gap-12 md:grid-cols-[1.4fr_1fr]">
+          <div>
+            <LogoMark className="h-11 w-11 text-lamp" />
+            <p className="mt-6 max-w-md font-display text-3xl leading-tight">
+              A city whose builder and maker is God.
+            </p>
+            <p className="mt-2 text-sm text-starlight-dim">Hebrews 11:10</p>
+          </div>
 
-        <div className="mt-10 grid gap-10 sm:grid-cols-3">
-          <div>
-            <p className="text-sm text-paper-dim">Pastor</p>
-            <p className="mt-1 text-paper">Michael Tomiwa</p>
-          </div>
-          <div>
-            <p className="text-sm text-paper-dim">Find us</p>
-            <p className="mt-1 text-paper">Nigeria — online, every watch</p>
-          </div>
-          <div>
-            <p className="text-sm text-paper-dim">Watch with us</p>
-            <a
-              href="https://www.youtube.com/@thecitybuilderscity"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mt-1 inline-block text-gold-text hover:text-ink"
-            >
-              YouTube — @thecitybuilderscity
-            </a>
+          <div className="grid gap-8 sm:grid-cols-2">
+            <div>
+              <p className="text-sm text-starlight-dim">Led by</p>
+              <p className="mt-1">Pastor Michael Tomiwa</p>
+              <p className="mt-6 text-sm text-starlight-dim">Gathering</p>
+              <p className="mt-1">In Nigeria and online, worldwide</p>
+            </div>
+            <div>
+              <p className="text-sm text-starlight-dim">Watch with us</p>
+              <a
+                href="https://www.youtube.com/@thecitybuilderscity"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-1 inline-block text-lamp underline-offset-4 hover:underline"
+              >
+                YouTube @thecitybuilderscity
+              </a>
+            </div>
           </div>
         </div>
 
-        <div className="mt-12 flex flex-col gap-2 border-t border-steel/60 pt-6 text-xs text-paper-dim sm:flex-row sm:items-center sm:justify-between">
-          <p>© {new Date().getFullYear()} The City Builders.</p>
-          <nav className="flex gap-5">
-            <Link href="/about" className="hover:text-gold-text">
-              About
-            </Link>
-            <Link href="/tools" className="hover:text-gold-text">
-              Resources
-            </Link>
-            <Link href="/prayer" className="hover:text-gold-text">
-              Prayer wall
-            </Link>
-            <Link href="/give" className="hover:text-gold-text">
-              Give
-            </Link>
+        <div className="mt-14 flex flex-col gap-4 border-t border-night-3 pt-6 text-sm text-starlight-dim sm:flex-row sm:items-center sm:justify-between">
+          <p>© {new Date().getFullYear()} The City Builders</p>
+          <nav className="flex flex-wrap gap-x-5 gap-y-2">
+            {footerLinks.map((link) => (
+              <Link key={link.href} href={link.href} className="hover:text-lamp">
+                {link.label}
+              </Link>
+            ))}
           </nav>
         </div>
       </div>

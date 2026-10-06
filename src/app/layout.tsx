@@ -1,19 +1,19 @@
 import type { Metadata } from "next";
-import { Fraunces, Inter } from "next/font/google";
+import { Gloock, Hanken_Grotesk } from "next/font/google";
 import "./globals.css";
 import { SiteHeader } from "@/components/site/site-header";
 import { SiteFooter } from "@/components/site/site-footer";
 import { MotionProvider } from "@/components/site/motion-provider";
 import { supabase } from "@/lib/supabase";
 
-const fraunces = Fraunces({
-  variable: "--font-fraunces",
+const gloock = Gloock({
+  variable: "--font-gloock",
   subsets: ["latin"],
-  axes: ["opsz", "SOFT", "WONK"],
+  weight: "400",
 });
 
-const inter = Inter({
-  variable: "--font-inter",
+const hanken = Hanken_Grotesk({
+  variable: "--font-hanken",
   subsets: ["latin"],
 });
 
@@ -43,7 +43,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
-      className={`${fraunces.variable} ${inter.variable} h-full antialiased`}
+      className={`${gloock.variable} ${hanken.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-midnight text-paper">
         <MotionProvider>
