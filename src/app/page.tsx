@@ -1,12 +1,13 @@
 import Link from "next/link";
 import Image from "next/image";
-import { supabase, type Sermon, type Post, type ChurchEvent } from "@/lib/supabase";
+import { supabase, type Post, type ChurchEvent } from "@/lib/supabase";
 import { Skyline } from "@/components/site/skyline";
 import { Button } from "@/components/ui/button";
 import { Reveal } from "@/components/site/reveal";
 import { LiveStream } from "@/components/site/live-stream";
 import { StaggerGrid, StaggerItem } from "@/components/site/stagger-grid";
 import { ParallaxHeroArt } from "@/components/site/parallax-hero-art";
+import { MomentsGallery } from "@/components/site/moments-gallery";
 
 export const revalidate = 60;
 
@@ -26,12 +27,7 @@ function formatTime(iso: string) {
 }
 
 async function getHomeData() {
-  const [{ data: sermons }, { data: posts }, { data: events }] = await Promise.all([
-    supabase
-      .from("sermons")
-      .select("*, series:series_id(id,title,slug)")
-      .order("streamed_at", { ascending: false })
-      .limit(3),
+  const [{ data: posts }, { data: events }] = await Promise.all([
     supabase
       .from("posts")
       .select("*")
@@ -47,14 +43,13 @@ async function getHomeData() {
   ]);
 
   return {
-    sermons: (sermons ?? []) as Sermon[],
     posts: (posts ?? []) as Post[],
     events: (events ?? []) as ChurchEvent[],
   };
 }
 
 export default async function HomePage() {
-  const { sermons, posts, events } = await getHomeData();
+  const { posts, events } = await getHomeData();
   const nextEvent = events[0];
 
   return (
@@ -62,12 +57,12 @@ export default async function HomePage() {
       {/* Hero */}
       <section className="relative overflow-hidden">
         <ParallaxHeroArt />
-        <div className="relative mx-auto max-w-6xl px-6 pt-16 pb-10 sm:pt-24">
+        <div className="relative mx-auto max-w-6xl px-6 pt-20 pb-12 sm:pt-28">
           <p className="text-sm text-paper-dim">The City Builders · Pastor Michael Tomiwa</p>
-          <h1 className="mt-6 max-w-3xl font-display text-[2.75rem] leading-[1.05] text-paper sm:text-6xl">
+          <h1 className="mt-6 max-w-3xl font-display text-[3rem] leading-[1.03] text-paper sm:text-7xl">
             A city whose builder and maker is God.
           </h1>
-          <p className="mt-6 max-w-xl text-lg leading-relaxed text-paper-dim">
+          <p className="mt-7 max-w-xl text-lg leading-relaxed text-paper-dim">
             We teach, equip, and inspire you to build strong spiritual foundations,
             walk in clarity, and mature in your purpose — one watch, one word, one
             season at a time.
@@ -185,55 +180,8 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* Latest from the watch */}
-      {sermons.length > 0 && (
-        <section className="border-t border-steel/60 bg-dusk/50">
-          <Reveal className="mx-auto max-w-6xl px-6 py-20">
-            <div className="flex items-end justify-between">
-              <h2 className="font-display text-3xl text-paper">Latest from the watch</h2>
-              <Link href="/sermons" className="text-sm text-paper-dim hover:text-gold-text">
-                All messages
-              </Link>
-            </div>
-            <div className="mt-10 grid gap-8 sm:grid-cols-3">
-              {sermons.map((sermon) => (
-                <Link
-                  key={sermon.id}
-                  href={`/sermons/${sermon.slug}`}
-                  className="group block transition-transform duration-300 hover:-translate-y-1"
-                >
-                  <div className="aspect-video overflow-hidden rounded-sm bg-dusk-2">
-                    {sermon.thumbnail_url ? (
-                      <Image
-                        src={sermon.thumbnail_url}
-                        alt=""
-                        width={480}
-                        height={270}
-                        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                      />
-                    ) : (
-                      <div className="flex h-full w-full items-center justify-center">
-                        <Skyline className="h-16 w-full opacity-60" />
-                      </div>
-                    )}
-                  </div>
-                  <p className="mt-4 text-xs text-paper-dim">
-                    {sermon.series?.title ?? "Message"} · {formatDate(sermon.streamed_at)}
-                  </p>
-                  <h3 className="mt-2 font-display text-xl text-paper group-hover:text-gold-text">
-                    {sermon.title}
-                  </h3>
-                  {sermon.description && (
-                    <p className="mt-2 text-sm text-paper-dim line-clamp-2">
-                      {sermon.description}
-                    </p>
-                  )}
-                </Link>
-              ))}
-            </div>
-          </Reveal>
-        </section>
-      )}
+      {/* Moments from the watch — real photo gallery */}
+      <MomentsGallery />
 
       {/* From the blog */}
       {posts.length > 0 && (
