@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase-server";
 import { LogoMark } from "@/components/site/logo-mark";
 import { AdminNav } from "@/components/admin/admin-nav";
@@ -14,11 +15,12 @@ export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("role, full_name")
+    .select("role, full_name, status")
     .eq("id", user.id)
     .maybeSingle();
 
   if (!profile || profile.role === "member") {
+    if (profile?.status === "active") redirect("/me");
     return (
       <div className="mx-auto max-w-lg px-6 py-24">
         <LogoMark className="h-10 w-10 text-gold" />
@@ -34,9 +36,11 @@ export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
     );
   }
 
-  const [{ count: pendingComments }, { count: newPrayers }] = await Promise.all([
+  const [{ count: pendingComments }, { count: newPrayers }, { count: pendingMembers }, { count: toReview }] = await Promise.all([
     supabase.from("post_comments").select("id", { count: "exact", head: true }).eq("approved", false),
     supabase.from("prayer_requests").select("id", { count: "exact", head: true }).eq("status", "new"),
+    supabase.from("profiles").select("id", { count: "exact", head: true }).eq("status", "pending"),
+    supabase.from("submissions").select("id", { count: "exact", head: true }).eq("status", "submitted"),
   ]);
 
   return (
@@ -60,7 +64,14 @@ export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
           </div>
         </div>
 
-        <AdminNav counts={{ comments: pendingComments ?? 0, prayers: newPrayers ?? 0 }} />
+        <AdminNav
+          counts={{
+            comments: pendingComments ?? 0,
+            prayers: newPrayers ?? 0,
+            members: pendingMembers ?? 0,
+            submissions: toReview ?? 0,
+          }}
+        />
 
         <div className="mt-auto hidden border-t border-night-3 px-5 py-5 text-sm lg:block">
           <p className="truncate text-starlight">{profile.full_name ?? user.email}</p>

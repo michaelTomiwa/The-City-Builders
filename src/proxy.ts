@@ -27,6 +27,20 @@ export async function proxy(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
+  const path = request.nextUrl.pathname;
+  if (path.startsWith("/me") && !user) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/join";
+    url.search = `?next=${encodeURIComponent(path)}`;
+    return NextResponse.redirect(url);
+  }
+  if (path === "/join" && user) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/me";
+    url.search = "";
+    return NextResponse.redirect(url);
+  }
+
   const isAdminRoute = request.nextUrl.pathname.startsWith("/admin");
   const isLoginRoute = request.nextUrl.pathname === "/admin/login";
 
@@ -46,5 +60,5 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/admin/:path*"],
+  matcher: ["/admin/:path*", "/me/:path*", "/me", "/join"],
 };

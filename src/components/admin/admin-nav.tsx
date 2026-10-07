@@ -19,6 +19,15 @@ const groups = [
     ],
   },
   {
+    label: "Discipleship",
+    items: [
+      { href: "/admin/members", label: "Members", badge: "members" as const },
+      { href: "/admin/programs", label: "Programmes" },
+      { href: "/admin/assignments", label: "Assignments", badge: "submissions" as const },
+      { href: "/admin/notices", label: "Word to members" },
+    ],
+  },
+  {
     label: "People",
     items: [
       { href: "/admin/comments", label: "Comments", badge: "comments" as const },
@@ -33,7 +42,11 @@ const groups = [
   },
 ];
 
-export function AdminNav({ counts }: { counts: { comments: number; prayers: number } }) {
+export function AdminNav({
+  counts,
+}: {
+  counts: { comments: number; prayers: number; members: number; submissions: number };
+}) {
   const pathname = usePathname();
 
   return (
