@@ -1,5 +1,11 @@
+import type { Metadata } from "next";
 import { supabase, type GivingLink } from "@/lib/supabase";
 import { PageHero } from "@/components/site/page-hero";
+
+export const metadata: Metadata = {
+  title: "Give",
+  description: "Give toward the work of The City Builders.",
+};
 
 export const revalidate = 60;
 

@@ -12,7 +12,7 @@ import { SubscribeForm } from "@/components/site/subscribe-form";
 export const revalidate = 60;
 
 export const metadata: Metadata = {
-  title: "Blog — The City Builders",
+  title: "Blog",
   description: "Reflections, teaching notes and words for the season from Pastor Michael Tomiwa and the City Builders team.",
 };
 

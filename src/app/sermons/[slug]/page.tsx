@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { supabase, type Sermon } from "@/lib/supabase";
@@ -11,6 +12,16 @@ function formatDate(iso: string) {
     month: "long",
     day: "numeric",
   });
+}
+
+export async function generateMetadata({ params }: PageProps<"/sermons/[slug]">): Promise<Metadata> {
+  const { slug } = await params;
+  const { data } = await supabase.from("sermons").select("title, description, speaker").eq("slug", slug).maybeSingle();
+  if (!data) return { title: "Message not found" };
+  return {
+    title: data.title,
+    description: data.description ?? `A message from ${data.speaker} at The City Builders.`,
+  };
 }
 
 export default async function SermonPage({ params }: PageProps<"/sermons/[slug]">) {

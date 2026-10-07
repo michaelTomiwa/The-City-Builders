@@ -1,7 +1,13 @@
+import type { Metadata } from "next";
 import { supabase } from "@/lib/supabase";
 import { PageHero } from "@/components/site/page-hero";
 import { PrayerForm } from "@/components/site/prayer-form";
 import { PrayedButton } from "@/components/site/prayed-button";
+
+export const metadata: Metadata = {
+  title: "Prayer wall",
+  description: "Share a prayer request with or without your name. The City Builders community will pray with you.",
+};
 
 export const revalidate = 0;
 

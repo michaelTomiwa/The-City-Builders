@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Gloock, Hanken_Grotesk } from "next/font/google";
 import "./globals.css";
 import { SiteHeader } from "@/components/site/site-header";
@@ -21,10 +21,43 @@ const hanken = Hanken_Grotesk({
   subsets: ["latin"],
 });
 
+const siteUrl =
+  process.env.NEXT_PUBLIC_SITE_URL ??
+  (process.env.VERCEL_PROJECT_PRODUCTION_URL
+    ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+    : "http://localhost:3000");
+
+const description =
+  "Pray with Pastor Michael Tomiwa and The City Builders: Night Watch at 11 PM and Morning Prayers at 7 AM, Lagos time, every day. Sermons, prayer and the word for your season.";
+
 export const metadata: Metadata = {
-  title: "The City Builders",
-  description:
-    "The City Builders — a faith-based ministry nurturing spiritual growth, discerning divine seasons, and building a people whose builder and maker is God. Led by Pastor Michael Tomiwa.",
+  metadataBase: new URL(siteUrl),
+  title: {
+    default: "The City Builders",
+    template: "%s — The City Builders",
+  },
+  description,
+  applicationName: "The City Builders",
+  // og:title / og:description fall back to each page's own <title> and description
+  openGraph: {
+    type: "website",
+    siteName: "The City Builders",
+    locale: "en_NG",
+  },
+  twitter: {
+    card: "summary_large_image",
+  },
+  appleWebApp: {
+    capable: true,
+    title: "City Builders",
+    statusBarStyle: "black-translucent",
+  },
+  formatDetection: { telephone: false },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#101c3a",
+  colorScheme: "light",
 };
 
 async function getNavPages() {

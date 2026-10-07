@@ -29,15 +29,15 @@ async function getPost(slug: string) {
 export async function generateMetadata({ params }: PageProps<"/blog/[slug]">): Promise<Metadata> {
   const { slug } = await params;
   const post = await getPost(slug);
-  if (!post) return { title: "Post not found — The City Builders" };
+  if (!post) return { title: "Post not found" };
   return {
-    title: `${post.title} — The City Builders`,
+    title: post.title,
     description: post.excerpt ?? undefined,
     openGraph: {
       title: post.title,
       description: post.excerpt ?? undefined,
       type: "article",
-      images: post.cover_image_url ? [post.cover_image_url] : undefined,
+      publishedTime: post.published_at ?? undefined,
     },
   };
 }
