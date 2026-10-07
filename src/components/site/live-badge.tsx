@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { STREAMS_URL, liveService } from "@/lib/schedule";
+import Link from "next/link";
+import { liveService } from "@/lib/schedule";
 
 /** A small "Live now" pill that only appears while a scheduled service is on air. */
 export function LiveBadge() {
@@ -20,10 +21,8 @@ export function LiveBadge() {
   if (!title) return null;
 
   return (
-    <a
-      href={STREAMS_URL}
-      target="_blank"
-      rel="noopener noreferrer"
+    <Link
+      href="/live"
       className="inline-flex items-center gap-2 rounded-full border border-[#e55a3c]/60 bg-[#e55a3c]/10 px-3 py-1 text-xs text-starlight transition-colors hover:bg-[#e55a3c]/25"
     >
       <span className="relative flex h-2 w-2">
@@ -31,6 +30,6 @@ export function LiveBadge() {
         <span className="relative inline-flex h-2 w-2 rounded-full bg-[#e55a3c]" />
       </span>
       {title} is live
-    </a>
+    </Link>
   );
 }

@@ -14,6 +14,7 @@ import { DailyRhythm } from "@/components/site/daily-rhythm";
 import { Reveal } from "@/components/site/reveal";
 import { VerseOfDay } from "@/components/tools/verse-of-day";
 import { CopyEmail } from "@/components/site/copy-email";
+import { NotifyMe } from "@/components/site/notify-me";
 import { CHANNEL_URL, CHURCH_EMAIL } from "@/lib/schedule";
 
 export const revalidate = 60;
@@ -170,7 +171,11 @@ export default async function HomePage() {
               pray with us in real time. When we&apos;re live, the stream starts
               here on its own.
             </p>
-            <p className="mt-6">
+            <NotifyMe className="mt-8" />
+            <p className="mt-6 flex flex-col gap-2">
+              <Link href="/live" className="text-lamp underline-offset-4 hover:underline">
+                Open the watch room
+              </Link>
               <Link href="/sermons" className="text-lamp underline-offset-4 hover:underline">
                 Browse every past message
               </Link>
