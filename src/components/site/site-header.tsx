@@ -54,6 +54,16 @@ export function SiteHeader({
             </Link>
           ))}
           <Link
+            href="/me"
+            className="inline-flex items-center gap-1.5 text-sm text-starlight transition-colors hover:text-lamp"
+          >
+            <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+              <circle cx="12" cy="8" r="4" />
+              <path d="M4 21a8 8 0 0 1 16 0" strokeLinecap="round" />
+            </svg>
+            Members
+          </Link>
+          <Link
             href="/give"
             className="rounded-sm bg-gold px-5 py-2 text-sm font-medium text-ink transition-colors hover:bg-gold-soft"
           >
@@ -120,6 +130,13 @@ export function SiteHeader({
                   </Link>
                 </motion.div>
               ))}
+              <Link
+                href="/me"
+                className="mt-2 rounded-sm border border-lamp/60 px-5 py-2 text-center text-sm text-lamp"
+                onClick={() => setOpen(false)}
+              >
+                Members: my dashboard
+              </Link>
               <Link
                 href="/give"
                 className="mt-2 rounded-sm bg-gold px-5 py-2 text-center text-sm font-medium text-ink"
