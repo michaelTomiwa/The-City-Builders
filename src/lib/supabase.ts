@@ -69,6 +69,8 @@ export type SiteSettings = {
   announcement: string | null;
   announcement_link: string | null;
   announcement_active: boolean;
+  logo_url?: string | null;
+  pastor_image_url?: string | null;
 };
 
 export type ChurchEvent = {

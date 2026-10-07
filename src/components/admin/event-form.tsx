@@ -2,6 +2,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { fieldHint, fieldLabel } from "./ui";
+import { ImageField } from "./image-field";
 
 type ChurchEvent = {
   id: string;
@@ -69,12 +70,7 @@ export function EventForm({ event, action }: { event?: ChurchEvent; action: (for
         </label>
         <Textarea id="description" name="description" rows={5} defaultValue={event?.description ?? ""} className="mt-2 bg-white" />
       </div>
-      <div>
-        <label htmlFor="cover_image_url" className={fieldLabel}>
-          Image link (optional)
-        </label>
-        <Input id="cover_image_url" name="cover_image_url" defaultValue={event?.cover_image_url ?? ""} className="mt-2 bg-white" />
-      </div>
+      <ImageField name="cover_image_url" label="Image (optional)" defaultValue={event?.cover_image_url ?? ""} folder="events" />
       <Button type="submit">{event ? "Save event" : "Add event"}</Button>
     </form>
   );

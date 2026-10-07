@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { cn } from "@/lib/utils";
-import { LogoMark } from "./logo-mark";
+import { BrandLogo } from "./brand-logo";
 import { LiveBadge } from "./live-badge";
 import { ScrollProgress } from "./scroll-progress";
 
@@ -20,8 +20,10 @@ const baseLinks = [
 
 export function SiteHeader({
   extraLinks = [],
+  logoUrl,
 }: {
   extraLinks?: { href: string; label: string }[];
+  logoUrl?: string | null;
 }) {
   const [open, setOpen] = useState(false);
   const links = [...baseLinks, ...extraLinks];
@@ -31,7 +33,7 @@ export function SiteHeader({
       <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
         <div className="flex items-center gap-4">
           <Link href="/" className="group flex items-center gap-2.5">
-            <LogoMark className="h-9 w-9 text-lamp transition-transform duration-500 group-hover:-translate-y-0.5" />
+            <BrandLogo src={logoUrl} className="h-9 w-9 text-lamp transition-transform duration-500 group-hover:-translate-y-0.5" />
             <span className="font-display text-xl text-starlight">
               City Builders
             </span>

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { LogoMark } from "./logo-mark";
+import { BrandLogo } from "./brand-logo";
 import { CHURCH_EMAIL, services } from "@/lib/schedule";
 import { InstallApp } from "./install-app";
 import { NotifyMe } from "./notify-me";
@@ -15,13 +15,13 @@ const footerLinks = [
   { href: "/give", label: "Give" },
 ];
 
-export function SiteFooter() {
+export function SiteFooter({ logoUrl }: { logoUrl?: string | null }) {
   return (
     <footer className="on-night bg-night text-starlight">
       <div className="mx-auto max-w-6xl px-6 pt-16 pb-10">
         <div className="grid gap-12 md:grid-cols-[1fr_1.25fr]">
           <div>
-            <LogoMark className="h-11 w-11 text-lamp" />
+            <BrandLogo src={logoUrl} className="h-11 w-11 text-lamp" />
             <p className="mt-6 max-w-md font-display text-3xl leading-tight">
               A city whose builder and maker is God.
             </p>
