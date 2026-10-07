@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { LogoMark } from "./logo-mark";
 import { CHURCH_EMAIL, services } from "@/lib/schedule";
+import { InstallApp } from "./install-app";
 
 const footerLinks = [
   { href: "/sermons", label: "The watch" },
@@ -59,7 +60,11 @@ export function SiteFooter() {
           </div>
         </div>
 
-        <div className="mt-14 flex flex-col gap-4 border-t border-night-3 pt-6 text-sm text-starlight-dim sm:flex-row sm:items-center sm:justify-between">
+        <div className="mt-12">
+          <InstallApp />
+        </div>
+
+        <div className="mt-10 flex flex-col gap-4 border-t border-night-3 pt-6 text-sm text-starlight-dim sm:flex-row sm:items-center sm:justify-between">
           <p>© {new Date().getFullYear()} The City Builders</p>
           <nav className="flex flex-wrap gap-x-5 gap-y-2">
             {footerLinks.map((link) => (

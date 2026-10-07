@@ -1,9 +1,15 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { PageHero } from "@/components/site/page-hero";
 import { getFeedVideos, formatViews } from "@/lib/youtube";
 import Image from "next/image";
 import { supabase, type Sermon, type Series } from "@/lib/supabase";
 import { Reveal } from "@/components/site/reveal";
+
+export const metadata: Metadata = {
+  title: "Sermons",
+  description: "Every Night Watch, Morning Prayer and series message from The City Builders, in one place.",
+};
 
 export const revalidate = 60;
 

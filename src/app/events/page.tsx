@@ -1,6 +1,12 @@
+import type { Metadata } from "next";
 import { supabase, type ChurchEvent } from "@/lib/supabase";
 import { PageHero } from "@/components/site/page-hero";
 import { DailyRhythm } from "@/components/site/daily-rhythm";
+
+export const metadata: Metadata = {
+  title: "Gatherings",
+  description: "Night Watch at 11 PM and Morning Prayers at 7 AM, Lagos time, every day, plus special gatherings.",
+};
 
 export const revalidate = 60;
 

@@ -18,7 +18,8 @@ import {
 import type { ReactNode } from "react";
 
 export const metadata: Metadata = {
-  title: "Resources — The City Builders",
+  title: "Resources",
+  description: "A verse for today, a prayer timer, a reading plan, a fasting tracker and scripture flashcards.",
 };
 
 function ToolHeading({ icon, title }: { icon: ReactNode; title: string }) {

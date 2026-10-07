@@ -1,7 +1,13 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import { Skyline } from "@/components/site/skyline";
 import { Reveal } from "@/components/site/reveal";
 import { PageHero } from "@/components/site/page-hero";
+
+export const metadata: Metadata = {
+  title: "About",
+  description: "Prayer, teaching and the prophetic with Pastor Michael Tomiwa, so believers can build strong foundations and understand their season.",
+};
 
 export default function AboutPage() {
   return (

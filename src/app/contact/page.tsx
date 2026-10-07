@@ -6,7 +6,7 @@ import { CopyEmail } from "@/components/site/copy-email";
 import { CHANNEL_URL, CHURCH_EMAIL, services } from "@/lib/schedule";
 
 export const metadata: Metadata = {
-  title: "Contact — The City Builders",
+  title: "Contact",
   description: `Write to The City Builders at ${CHURCH_EMAIL}.`,
 };
 
