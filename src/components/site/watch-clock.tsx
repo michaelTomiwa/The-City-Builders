@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
 import {
-  STREAMS_URL,
   googleCalendarUrl,
   icsDataUrl,
   serviceOccurrences,
@@ -125,14 +125,12 @@ export function WatchClock({ events }: { events: WatchEvent[] }) {
           <p className="mt-1 text-sm text-starlight-dim">
             Started at {lagosTime(new Date(live.starts_at))}, Lagos time
           </p>
-          <a
-            href={STREAMS_URL}
-            target="_blank"
-            rel="noopener noreferrer"
+          <Link
+            href="/live"
             className="mt-6 inline-flex h-11 w-full items-center justify-center bg-gold px-6 text-[0.95rem] font-medium text-ink transition-colors hover:bg-gold-soft"
           >
             Join the live watch
-          </a>
+          </Link>
           {next && (
             <p className="mt-4 text-sm text-starlight-dim">
               After this: {next.title}, {lagosDate(next.starts_at)}

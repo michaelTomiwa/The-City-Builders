@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase-server";
+import { sendAlert } from "@/lib/push";
 
 function slugify(title: string) {
   return title
@@ -359,4 +360,20 @@ export async function deletePage(formData: FormData) {
   check((await supabase.from("pages").delete().eq("id", text(formData, "id"))).error);
   revalidatePath("/admin/pages");
   revalidatePath("/", "layout");
+}
+
+export async function sendLiveAlert(formData: FormData) {
+  await staff();
+  const title = text(formData, "title");
+  const body = text(formData, "body");
+  if (!title) redirect("/admin/alerts?error=" + encodeURIComponent("Give the alert a title."));
+
+  let result: Awaited<ReturnType<typeof sendAlert>>;
+  try {
+    result = await sendAlert({ key: `manual-${Date.now()}`, title, body, url: optional(formData, "url") ?? "/live" });
+  } catch (err) {
+    redirect("/admin/alerts?error=" + encodeURIComponent((err as Error).message));
+  }
+  revalidatePath("/admin/alerts");
+  redirect(`/admin/alerts?sent=${result?.sent ?? 0}`);
 }

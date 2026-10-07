@@ -2,8 +2,10 @@ import Link from "next/link";
 import { LogoMark } from "./logo-mark";
 import { CHURCH_EMAIL, services } from "@/lib/schedule";
 import { InstallApp } from "./install-app";
+import { NotifyMe } from "./notify-me";
 
 const footerLinks = [
+  { href: "/live", label: "Watch live" },
   { href: "/sermons", label: "The watch" },
   { href: "/events", label: "Gatherings" },
   { href: "/tools", label: "Resources" },
@@ -60,7 +62,8 @@ export function SiteFooter() {
           </div>
         </div>
 
-        <div className="mt-12">
+        <div className="mt-12 flex flex-col gap-4 sm:flex-row sm:items-center">
+          <NotifyMe />
           <InstallApp />
         </div>
 
