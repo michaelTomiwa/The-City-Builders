@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { fieldHint, fieldLabel } from "./ui";
+import { ImageField } from "./image-field";
 
 type Sermon = {
   id: string;
@@ -121,12 +122,7 @@ export function SermonForm({
           <Textarea id="description" name="description" rows={6} defaultValue={sermon?.description ?? ""} className="mt-2 bg-white" />
           <p className={fieldHint}>Key scriptures and points from the message.</p>
         </div>
-        <div>
-          <label htmlFor="thumbnail_url" className={fieldLabel}>
-            Custom thumbnail link (optional)
-          </label>
-          <Input id="thumbnail_url" name="thumbnail_url" defaultValue={sermon?.thumbnail_url ?? ""} className="mt-2 bg-white" />
-        </div>
+        <ImageField name="thumbnail_url" label="Custom thumbnail (optional)" defaultValue={sermon?.thumbnail_url ?? ""} folder="sermons" hint="Leave empty to use the YouTube thumbnail." />
       </div>
 
       <aside className="space-y-4 lg:sticky lg:top-8 lg:self-start">

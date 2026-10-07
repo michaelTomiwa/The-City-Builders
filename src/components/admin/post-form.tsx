@@ -7,6 +7,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { fieldHint, fieldLabel } from "./ui";
 import { cn } from "@/lib/utils";
+import { uploadImage } from "@/lib/upload-image";
+import { ImageField } from "./image-field";
 
 type Post = {
   id: string;
@@ -58,6 +60,9 @@ export function PostForm({ post, action }: { post?: Post; action: (formData: For
   const [status, setStatus] = useState<"draft" | "publish" | "schedule">(initialStatus);
   const [tab, setTab] = useState<"write" | "preview">("write");
   const editor = useRef<HTMLTextAreaElement>(null);
+  const picker = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
 
   const words = content.trim() ? content.trim().split(/\s+/).length : 0;
   const minutes = Math.max(1, Math.round(words / 220));
@@ -83,6 +88,25 @@ export function PostForm({ post, action }: { post?: Post; action: (formData: For
       el.focus();
       el.setSelectionRange(cursor, cursor);
     });
+  }
+
+  /** Uploads an image and drops it into the post where the cursor is. */
+  async function insertImage(file: File | undefined) {
+    if (!file || !file.type.startsWith("image/")) return;
+    const el = editor.current;
+    const at = el ? el.selectionStart : content.length;
+    setUploading(true);
+    setUploadError(null);
+    try {
+      const url = await uploadImage(file, "posts");
+      const alt = file.name.replace(/\.[^.]+$/, "").replace(/[-_]+/g, " ");
+      setContent((c) => `${c.slice(0, at)}\n\n![${alt}](${url})\n\n${c.slice(at)}`);
+    } catch (err) {
+      setUploadError((err as Error).message);
+    } finally {
+      setUploading(false);
+      if (picker.current) picker.current.value = "";
+    }
   }
 
   return (
@@ -170,6 +194,28 @@ export function PostForm({ post, action }: { post?: Post; action: (formData: For
                     {tool.label}
                   </button>
                 ))}
+                <button
+                  type="button"
+                  title="Add an image"
+                  onClick={() => picker.current?.click()}
+                  disabled={uploading}
+                  className="inline-flex items-center gap-1.5 rounded px-2.5 py-1 text-sm text-paper-dim hover:bg-white hover:text-paper disabled:opacity-60"
+                >
+                  <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+                    <rect x="3" y="4" width="18" height="16" rx="2" />
+                    <circle cx="9" cy="10" r="2" />
+                    <path d="m21 16-5-5-9 9" strokeLinejoin="round" />
+                  </svg>
+                  {uploading ? "Uploading…" : "Image"}
+                </button>
+                <input
+                  ref={picker}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,image/gif"
+                  className="sr-only"
+                  tabIndex={-1}
+                  onChange={(e) => insertImage(e.target.files?.[0])}
+                />
               </div>
             )}
             <textarea
@@ -180,17 +226,38 @@ export function PostForm({ post, action }: { post?: Post; action: (formData: For
               rows={20}
               value={content}
               onChange={(e) => setContent(e.target.value)}
+              onPaste={(e) => {
+                const file = Array.from(e.clipboardData.files).find((f) => f.type.startsWith("image/"));
+                if (file) {
+                  e.preventDefault();
+                  insertImage(file);
+                }
+              }}
+              onDragOver={(e) => e.preventDefault()}
+              onDrop={(e) => {
+                const file = Array.from(e.dataTransfer.files).find((f) => f.type.startsWith("image/"));
+                if (file) {
+                  e.preventDefault();
+                  insertImage(file);
+                }
+              }}
               className={cn("w-full resize-y bg-white px-4 py-3 font-mono text-sm leading-relaxed text-paper outline-none", tab === "preview" && "hidden")}
             />
             {tab === "preview" && (
-              <div className="min-h-[30rem] px-6 py-5 text-[1.05rem] leading-[1.8] text-paper-dim [&_a]:text-gold-text [&_a]:underline [&_blockquote]:border-l-2 [&_blockquote]:border-gold [&_blockquote]:pl-5 [&_blockquote]:font-display [&_blockquote]:text-xl [&_blockquote]:text-paper [&_h2]:mt-8 [&_h2]:font-display [&_h2]:text-2xl [&_h2]:text-paper [&_h3]:mt-6 [&_h3]:font-display [&_h3]:text-xl [&_h3]:text-paper [&_ol]:list-decimal [&_ol]:pl-6 [&_p]:mt-4 [&_strong]:text-paper [&_ul]:list-disc [&_ul]:pl-6">
+              <div className="min-h-[30rem] px-6 py-5 text-[1.05rem] leading-[1.8] text-paper-dim [&_a]:text-gold-text [&_a]:underline [&_blockquote]:border-l-2 [&_blockquote]:border-gold [&_blockquote]:pl-5 [&_blockquote]:font-display [&_blockquote]:text-xl [&_blockquote]:text-paper [&_h2]:mt-8 [&_h2]:font-display [&_h2]:text-2xl [&_h2]:text-paper [&_h3]:mt-6 [&_h3]:font-display [&_h3]:text-xl [&_h3]:text-paper [&_img]:my-6 [&_img]:rounded-sm [&_ol]:list-decimal [&_ol]:pl-6 [&_p]:mt-4 [&_strong]:text-paper [&_ul]:list-disc [&_ul]:pl-6">
                 {title && <h1 className="mb-4 font-display text-4xl text-paper">{title}</h1>}
                 {content ? <ReactMarkdown>{content}</ReactMarkdown> : <p className="text-paper-dim">Nothing written yet.</p>}
               </div>
             )}
           </div>
+          {uploadError && (
+            <p className="mt-2 text-sm text-[#8a2f1e]" role="alert">
+              {uploadError}
+            </p>
+          )}
           <p className={fieldHint}>
-            {words} words, about {minutes} min read. Use the buttons for headings, scripture quotes and lists.
+            {words} words, about {minutes} min read. Use the buttons for headings, scripture quotes, lists and
+            images. You can also paste or drag a picture straight into the post.
           </p>
         </div>
       </div>
@@ -250,23 +317,14 @@ export function PostForm({ post, action }: { post?: Post; action: (formData: For
         </div>
 
         <div className="rounded-md border border-steel bg-white/80 p-4">
-          <label htmlFor="cover_image_url" className="text-sm font-medium text-paper">
-            Cover image link
-          </label>
-          <Input
-            id="cover_image_url"
+          <ImageField
             name="cover_image_url"
+            label="Cover image"
             value={cover}
-            onChange={(e) => setCover(e.target.value)}
-            placeholder="https://"
-            className="mt-2 bg-white"
+            onChange={setCover}
+            folder="covers"
+            hint={cover ? undefined : "Without one, the post gets a night-sky cover with its first letter."}
           />
-          {cover ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={cover} alt="Cover preview" className="mt-3 aspect-[16/9] w-full rounded-sm object-cover" />
-          ) : (
-            <p className="mt-1 text-xs text-paper-dim">Without one, the post gets a night-sky cover with its first letter.</p>
-          )}
         </div>
 
         <Button type="submit" className="w-full">

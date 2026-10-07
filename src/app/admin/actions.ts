@@ -377,3 +377,21 @@ export async function sendLiveAlert(formData: FormData) {
   revalidatePath("/admin/alerts");
   redirect(`/admin/alerts?sent=${result?.sent ?? 0}`);
 }
+
+export async function saveBrand(formData: FormData) {
+  const { supabase } = await staff();
+  check(
+    (
+      await supabase
+        .from("site_settings")
+        .update({
+          logo_url: optional(formData, "logo_url"),
+          pastor_image_url: optional(formData, "pastor_image_url"),
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", 1)
+    ).error
+  );
+  revalidatePath("/", "layout");
+  redirect("/admin/settings?saved=brand");
+}

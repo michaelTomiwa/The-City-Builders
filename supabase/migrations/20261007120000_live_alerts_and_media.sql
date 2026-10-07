@@ -106,3 +106,28 @@ create extension if not exists pg_cron;
 create extension if not exists pg_net;
 select cron.schedule('night-watch-alert', '55 21 * * *', $$select net.http_post(url := 'https://city-builders-church.vercel.app/api/push/cron', body := '{}'::jsonb)$$);
 select cron.schedule('morning-prayers-alert', '55 5 * * *', $$select net.http_post(url := 'https://city-builders-church.vercel.app/api/push/cron', body := '{}'::jsonb)$$);
+
+-- Media library: images uploaded from the admin (blog covers, sermon and event images).
+-- Public to read; only admins and authors can upload.
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values ('media', 'media', true, 10485760, array['image/jpeg','image/png','image/webp','image/gif'])
+on conflict (id) do nothing;
+
+create policy "staff upload media" on storage.objects
+  for insert to authenticated with check (bucket_id = 'media' and public.is_admin());
+create policy "staff update media" on storage.objects
+  for update to authenticated using (bucket_id = 'media' and public.is_admin());
+
+-- Brand images the admin can change (Settings > Logo and photos).
+alter table public.site_settings
+  add column if not exists logo_url text,
+  add column if not exists pastor_image_url text;
+
+-- Storage meter for the admin Settings page.
+create or replace function public.media_usage()
+returns table (bytes bigint, files bigint)
+language sql security definer set search_path = public, storage as $$
+  select coalesce(sum((o.metadata->>'size')::bigint), 0)::bigint, count(*)::bigint
+  from storage.objects o
+  where o.bucket_id = 'media' and public.is_admin();
+$$;

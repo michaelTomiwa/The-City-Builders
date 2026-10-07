@@ -1,5 +1,4 @@
 import Link from "next/link";
-import Image from "next/image";
 import { supabase, type Post, type ChurchEvent } from "@/lib/supabase";
 import { LiveStream } from "@/components/site/live-stream";
 import { RecentSessions } from "@/components/site/recent-sessions";
@@ -15,6 +14,7 @@ import { Reveal } from "@/components/site/reveal";
 import { VerseOfDay } from "@/components/tools/verse-of-day";
 import { CopyEmail } from "@/components/site/copy-email";
 import { NotifyMe } from "@/components/site/notify-me";
+import { DEFAULT_PASTOR_IMAGE, getSiteSettings } from "@/lib/settings";
 import { CHANNEL_URL, CHURCH_EMAIL } from "@/lib/schedule";
 
 export const revalidate = 60;
@@ -108,7 +108,7 @@ const firstWatch = [
 ];
 
 export default async function HomePage() {
-  const { posts, events } = await getHomeData();
+  const [{ posts, events }, settings] = await Promise.all([getHomeData(), getSiteSettings()]);
 
   return (
     <>
@@ -195,8 +195,9 @@ export default async function HomePage() {
       <section>
         <div className="mx-auto grid max-w-6xl gap-10 px-6 py-20 md:grid-cols-[minmax(0,320px)_1fr] md:gap-16">
           <div className="relative isolate">
-            <Image
-              src="/images/pastor-michael-tomiwa.jpg"
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={settings?.pastor_image_url || DEFAULT_PASTOR_IMAGE}
               alt="Pastor Michael Tomiwa"
               width={640}
               height={640}

@@ -3,21 +3,88 @@ import { AdminHeader, Panel, fieldHint, fieldLabel, smallButton } from "@/compon
 import { ConfirmButton } from "@/components/admin/confirm-button";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { deleteGivingLink, saveAnnouncement, saveGivingLink } from "../actions";
+import { ImageField } from "@/components/admin/image-field";
+import { DEFAULT_PASTOR_IMAGE } from "@/lib/settings";
+import { deleteGivingLink, saveAnnouncement, saveBrand, saveGivingLink } from "../actions";
+
+const STORAGE_LIMIT = 1024 * 1024 * 1024; // Supabase free plan: 1 GB of files
+
+function megabytes(bytes: number) {
+  return bytes < 1024 * 1024 ? `${Math.round(bytes / 1024)} KB` : `${(bytes / 1024 / 1024).toFixed(1)} MB`;
+}
 
 export default async function AdminSettings({ searchParams }: PageProps<"/admin/settings">) {
   const params = await searchParams;
   const supabase = await createClient();
-  const [{ data: settings }, { data: links }] = await Promise.all([
+  const [{ data: settings }, { data: links }, { data: usageRows }] = await Promise.all([
     supabase.from("site_settings").select("*").eq("id", 1).maybeSingle(),
     supabase.from("giving_links").select("*").order("label"),
+    supabase.rpc("media_usage"),
   ]);
+  const usage = (Array.isArray(usageRows) ? usageRows[0] : usageRows) as { bytes: number; files: number } | null;
+  const used = Number(usage?.bytes ?? 0);
+  const percent = Math.min(100, (used / STORAGE_LIMIT) * 100);
 
   return (
     <div>
-      <AdminHeader title="Settings" description="Site-wide announcement and the giving options on the Give page." />
+      <AdminHeader title="Settings" description="Logo and photos, the site-wide announcement, and the giving options on the Give page." />
 
       <Panel className="mt-8">
+        <h2 className="font-display text-2xl text-paper">Logo and photos</h2>
+        <p className="mt-1 text-sm text-paper-dim">Change these any time. The whole site updates within a minute.</p>
+        {params.saved === "brand" && (
+          <p className="mt-4 rounded-md border border-[#bfe0c8] bg-[#eef8f0] px-4 py-2 text-sm text-[#24613a]" role="status">
+            Saved. The site now shows your new images.
+          </p>
+        )}
+        <form action={saveBrand} className="mt-5">
+          <div className="grid gap-8 sm:grid-cols-2">
+            <div className="max-w-xs">
+              <ImageField
+                name="logo_url"
+                label="Logo"
+                defaultValue={settings?.logo_url ?? ""}
+                folder="brand"
+                keepOriginal
+                fit="contain"
+                aspect="aspect-square"
+                previewClassName="bg-night"
+              />
+              <p className={fieldHint}>
+                Shown in the header and footer, on the dark night background. A PNG with a transparent background looks
+                best. Remove it to go back to the built-in City Builders mark.
+              </p>
+            </div>
+            <div className="max-w-xs">
+              <ImageField
+                name="pastor_image_url"
+                label="Pastor's photo"
+                defaultValue={settings?.pastor_image_url ?? ""}
+                folder="brand"
+                aspect="aspect-[4/5]"
+              />
+              <p className={fieldHint}>
+                Used on the homepage welcome and the About page. A portrait photo works best.
+                {!settings?.pastor_image_url && (
+                  <>
+                    {" "}
+                    Right now the site uses{" "}
+                    <a href={DEFAULT_PASTOR_IMAGE} target="_blank" rel="noopener noreferrer" className="text-gold-text underline">
+                      this photo
+                    </a>
+                    .
+                  </>
+                )}
+              </p>
+            </div>
+          </div>
+          <Button type="submit" className="mt-6">
+            Save logo and photos
+          </Button>
+        </form>
+      </Panel>
+
+      <Panel className="mt-6">
         <h2 className="font-display text-2xl text-paper">Announcement banner</h2>
         <p className="mt-1 text-sm text-paper-dim">A gold strip across the top of every page, for conferences, special services or urgent news.</p>
         {params.saved === "announcement" && (
@@ -94,6 +161,19 @@ export default async function AdminSettings({ searchParams }: PageProps<"/admin/
           </label>
           <button className="rounded-sm bg-gold px-4 py-2 text-sm font-medium text-ink hover:bg-gold-soft">Add option</button>
         </form>
+      </Panel>
+
+      <Panel className="mt-6">
+        <h2 className="font-display text-2xl text-paper">Image storage</h2>
+        <p className="mt-1 text-sm text-paper-dim">
+          Every uploaded image is resized first, usually to 150 to 400 KB, so the free 1 GB holds thousands of them.
+        </p>
+        <div className="mt-5 h-3 overflow-hidden rounded-full bg-dusk" role="progressbar" aria-valuenow={Math.round(percent)} aria-valuemin={0} aria-valuemax={100} aria-label="Storage used">
+          <div className={percent > 85 ? "h-full bg-[#c2492f]" : "h-full bg-gold"} style={{ width: `${Math.max(percent, 0.5)}%` }} />
+        </div>
+        <p className="mt-2 text-sm text-paper">
+          {megabytes(used)} of 1 GB used · {Number(usage?.files ?? 0)} {Number(usage?.files ?? 0) === 1 ? "image" : "images"}
+        </p>
       </Panel>
     </div>
   );

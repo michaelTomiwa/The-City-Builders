@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Image from "next/image";
+import { DEFAULT_PASTOR_IMAGE, getSiteSettings } from "@/lib/settings";
 import { Skyline } from "@/components/site/skyline";
 import { Reveal } from "@/components/site/reveal";
 import { PageHero } from "@/components/site/page-hero";
@@ -9,7 +10,10 @@ export const metadata: Metadata = {
   description: "Prayer, teaching and the prophetic with Pastor Michael Tomiwa, so believers can build strong foundations and understand their season.",
 };
 
-export default function AboutPage() {
+export const revalidate = 60;
+
+export default async function AboutPage() {
+  const settings = await getSiteSettings();
   return (
     <div>
       <PageHero
@@ -42,8 +46,9 @@ export default function AboutPage() {
         </div>
 
         <div className="mt-16 flex flex-col gap-8 sm:flex-row sm:items-start">
-          <Image
-            src="/images/pastor-michael-tomiwa.jpg"
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={settings?.pastor_image_url || DEFAULT_PASTOR_IMAGE}
             alt="Pastor Michael Tomiwa"
             width={160}
             height={160}
