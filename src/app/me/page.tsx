@@ -1,18 +1,19 @@
 import Link from "next/link";
 import ReactMarkdown from "react-markdown";
-import { getMember, getMemberData } from "@/lib/member-data";
+import { getMember, getMemberData, memberGrowth } from "@/lib/member-data";
 import {
   dueLabel,
   firstName,
-  growth,
   lagosToday,
   programPhase,
-  streak,
   type Checkin,
   type Step,
 } from "@/lib/discipleship";
 import { StepCard } from "@/components/members/step-card";
 import { ProgressRing } from "@/components/members/progress-ring";
+import { ImHere } from "@/components/members/im-here";
+import { PartnerCard, type Partner } from "@/components/members/partner-card";
+import { savePrayerNeed } from "./actions";
 
 function greeting() {
   const hour = (new Date().getUTCHours() + 1) % 24;
@@ -27,14 +28,15 @@ function todayLabel() {
 }
 
 export default async function TodayPage() {
-  const { profile } = await getMember();
-  const { programs, steps, checkins, assignments, submissions, notices } = await getMemberData();
+  const { profile, supabase } = await getMember();
+  const { data: partnerRows } = await supabase.rpc("my_partner");
+  const partner = ((partnerRows ?? []) as Partner[])[0] ?? null;
+  const data = await getMemberData();
+  const { programs, steps, checkins, assignments, submissions, notices } = data;
   const today = lagosToday();
 
   const doneBy = new Map<string, Checkin>(checkins.map((c) => [c.step_id, c]));
-  const reviewed = submissions.filter((s) => s.status === "reviewed").length;
-  const g = growth(checkins.length + reviewed * 5);
-  const days = streak(checkins.map((c) => c.created_at), today);
+  const { g, streakDays: days } = memberGrowth(data);
 
   const active = programs
     .map((p) => ({ p, ...programPhase(p, today) }))
@@ -75,6 +77,8 @@ export default async function TodayPage() {
           </div>
         )}
       </div>
+
+      <ImHere tone="paper" className="mt-6" />
 
       {/* Growth */}
       <div className="mt-8 grid gap-4 sm:grid-cols-3">
@@ -181,6 +185,24 @@ export default async function TodayPage() {
                 </article>
               ))}
             </section>
+          )}
+
+          {partner && <PartnerCard partner={partner} />}
+
+          {partner && (
+            <form action={savePrayerNeed} className="rounded-md border border-steel bg-white p-5">
+              <label htmlFor="prayer_need" className="text-sm font-medium text-paper">
+                What should your partner pray for this week?
+              </label>
+              <textarea
+                id="prayer_need"
+                name="prayer_need"
+                rows={2}
+                defaultValue={profile?.prayer_need ?? ""}
+                className="mt-2 w-full rounded-sm border border-steel px-3 py-2 text-sm text-paper outline-none focus:border-gold"
+              />
+              <button className="mt-2 rounded-sm border border-steel px-3 py-1.5 text-sm text-paper hover:border-gold">Save</button>
+            </form>
           )}
 
           <section className="rounded-md border border-steel bg-white p-5">

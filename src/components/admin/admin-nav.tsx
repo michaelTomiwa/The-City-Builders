@@ -7,7 +7,10 @@ import { cn } from "@/lib/utils";
 const groups = [
   {
     label: "Overview",
-    items: [{ href: "/admin", label: "Dashboard", exact: true }],
+    items: [
+      { href: "/admin", label: "Dashboard", exact: true },
+      { href: "/admin/report", label: "Weekly report" },
+    ],
   },
   {
     label: "Content",
@@ -23,7 +26,10 @@ const groups = [
     items: [
       { href: "/admin/members", label: "Members", badge: "members" as const },
       { href: "/admin/programs", label: "Programmes" },
+      { href: "/admin/school", label: "School" },
       { href: "/admin/assignments", label: "Assignments", badge: "submissions" as const },
+      { href: "/admin/partners", label: "Prayer partners" },
+      { href: "/admin/testimonies", label: "Testimonies", badge: "testimonies" as const },
       { href: "/admin/notices", label: "Word to members" },
     ],
   },
@@ -45,7 +51,7 @@ const groups = [
 export function AdminNav({
   counts,
 }: {
-  counts: { comments: number; prayers: number; members: number; submissions: number };
+  counts: { comments: number; prayers: number; members: number; submissions: number; testimonies: number };
 }) {
   const pathname = usePathname();
 

@@ -1,7 +1,7 @@
 import { getMember } from "@/lib/member-data";
 import { lagosDateTime } from "@/lib/discipleship";
 import { ConfirmButton } from "@/components/admin/confirm-button";
-import { deleteJournal, saveJournal } from "../actions";
+import { deleteJournal, saveJournal, shareTestimony } from "../actions";
 
 export default async function JournalPage({ searchParams }: PageProps<"/me/journal">) {
   const params = await searchParams;
@@ -12,6 +12,8 @@ export default async function JournalPage({ searchParams }: PageProps<"/me/journ
     .eq("user_id", user!.id)
     .order("created_at", { ascending: false });
   const entries = (data ?? []) as { id: string; title: string | null; body: string; shared: boolean; created_at: string }[];
+  const { data: mine } = await supabase.from("testimonies").select("id, title, status, created_at").eq("user_id", user!.id).order("created_at", { ascending: false });
+  const testimonies = (mine ?? []) as { id: string; title: string; status: string; created_at: string }[];
 
   return (
     <div className="grid gap-10 lg:grid-cols-[22rem_minmax(0,1fr)]">
@@ -43,6 +45,33 @@ export default async function JournalPage({ searchParams }: PageProps<"/me/journ
             </label>
             <button className="rounded-sm bg-gold px-5 py-2 text-sm font-medium text-ink hover:bg-gold-soft">Save entry</button>
           </div>
+        </form>
+
+        <form action={shareTestimony} className="on-night mt-6 rounded-md bg-night p-5 text-starlight">
+          <h2 className="font-display text-2xl">Share a testimony</h2>
+          <p className="mt-1 text-sm text-starlight-dim">What has God done? Once the pastor approves it, it appears on the testimonies wall to encourage others.</p>
+          {params.testimony === "sent" && (
+            <p className="mt-3 rounded-sm bg-lamp/15 px-3 py-2 text-sm text-lamp" role="status">
+              Thank you. The pastor will read it soon.
+            </p>
+          )}
+          <input name="title" required placeholder="Headline, e.g. God healed my mother" className="mt-4 h-10 w-full rounded-sm border border-night-3 bg-night-2 px-3 text-sm text-starlight outline-none placeholder:text-starlight-dim/60 focus:border-lamp" />
+          <textarea name="body" required rows={5} placeholder="Tell the story…" className="mt-2 w-full rounded-sm border border-night-3 bg-night-2 px-3 py-2 text-sm text-starlight outline-none placeholder:text-starlight-dim/60 focus:border-lamp" />
+          <label className="mt-2 flex items-center gap-2 text-sm text-starlight-dim">
+            <input type="checkbox" name="anonymous" className="accent-gold" />
+            Share without my name
+          </label>
+          <button className="mt-3 rounded-sm bg-gold px-5 py-2 text-sm font-medium text-ink hover:bg-gold-soft">Send testimony</button>
+          {testimonies.length > 0 && (
+            <ul className="mt-4 space-y-1 border-t border-night-3 pt-3 text-sm">
+              {testimonies.map((t) => (
+                <li key={t.id} className="flex justify-between gap-3">
+                  <span className="truncate">{t.title}</span>
+                  <span className="shrink-0 text-xs text-starlight-dim">{t.status === "approved" ? "On the wall" : t.status === "pending" ? "Waiting" : "Not shared"}</span>
+                </li>
+              ))}
+            </ul>
+          )}
         </form>
       </div>
 

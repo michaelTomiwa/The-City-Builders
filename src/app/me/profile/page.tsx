@@ -1,5 +1,5 @@
-import { getMember, getMemberData } from "@/lib/member-data";
-import { growth, levels, streak } from "@/lib/discipleship";
+import { getMember, getMemberData, memberGrowth } from "@/lib/member-data";
+import { levels, pointsGuide } from "@/lib/discipleship";
 import { NotifyMe } from "@/components/site/notify-me";
 import { updateProfile } from "../actions";
 import { cn } from "@/lib/utils";
@@ -9,9 +9,9 @@ const field = "mt-1.5 h-11 w-full rounded-sm border border-steel bg-white px-3 t
 export default async function ProfilePage({ searchParams }: PageProps<"/me/profile">) {
   const params = await searchParams;
   const { profile, user } = await getMember();
-  const { checkins, submissions, programs, steps } = await getMemberData();
-  const reviewed = submissions.filter((s) => s.status === "reviewed").length;
-  const g = growth(checkins.length + reviewed * 5);
+  const data = await getMemberData();
+  const { checkins, programs, steps } = data;
+  const { g, streakDays, reviewed } = memberGrowth(data);
   const done = new Set(checkins.map((c) => c.step_id));
   const finishedPrograms = programs.filter((p) => {
     const own = steps.filter((s) => s.program_id === p.id);
@@ -21,8 +21,12 @@ export default async function ProfilePage({ searchParams }: PageProps<"/me/profi
   const stats = [
     { label: "Steps kept", value: checkins.length },
     { label: "Programmes completed", value: finishedPrograms },
+    { label: "Lessons passed", value: data.lessonsDone.length },
+    { label: "Services attended", value: data.attendance.length },
+    { label: "Bible days read", value: data.bibleDays.length },
     { label: "Assignments reviewed", value: reviewed },
-    { label: "Current streak", value: streak(checkins.map((c) => c.created_at)) },
+    { label: "Growth points", value: g.points },
+    { label: "Current streak", value: streakDays },
   ];
 
   return (
@@ -59,7 +63,7 @@ export default async function ProfilePage({ searchParams }: PageProps<"/me/profi
             );
           })}
         </ol>
-        <p className="mt-3 text-xs text-paper-dim">One point for every step you keep, five for every assignment the pastor reviews.</p>
+        <p className="mt-3 text-xs text-paper-dim">{pointsGuide}</p>
       </div>
 
       <aside className="space-y-6">
@@ -79,11 +83,18 @@ export default async function ProfilePage({ searchParams }: PageProps<"/me/profi
             <input name="phone" type="tel" defaultValue={profile?.phone ?? ""} className={field} />
           </label>
           <p className="mt-3 text-sm text-paper-dim">Email: {user?.email}</p>
+          <label className="mt-3 flex items-start gap-2 text-sm text-paper">
+            <input type="checkbox" name="daily_reminder" defaultChecked={profile?.daily_reminder ?? true} className="mt-1 accent-gold" />
+            <span>
+              Morning reminder at 6 AM with today&rsquo;s step
+              <span className="block text-xs text-paper-dim">Needs alerts turned on for this phone (below).</span>
+            </span>
+          </label>
           <button className="mt-4 rounded-sm bg-gold px-5 py-2 text-sm font-medium text-ink hover:bg-gold-soft">Save</button>
         </form>
         <div className="on-night rounded-md bg-night p-5 text-starlight">
-          <h2 className="font-display text-xl">Never miss a watch</h2>
-          <p className="mt-1 text-sm text-starlight-dim">Get an alert on this phone 5 minutes before Night Watch and Morning Prayers.</p>
+          <h2 className="font-display text-xl">Alerts on this phone</h2>
+          <p className="mt-1 text-sm text-starlight-dim">Your 6 AM step reminder, plus an alert 5 minutes before Night Watch and Morning Prayers.</p>
           <NotifyMe className="mt-4" />
         </div>
       </aside>

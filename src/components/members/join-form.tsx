@@ -15,6 +15,23 @@ export function JoinForm({ next }: { next: string }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [checkEmail, setCheckEmail] = useState(false);
+  const [resetSent, setResetSent] = useState(false);
+
+  async function forgot(form: HTMLFormElement | null) {
+    const email = String(new FormData(form ?? undefined).get("email") ?? "").trim();
+    if (!email) {
+      setError("Type your email above first, then tap “Forgot password?”.");
+      return;
+    }
+    setBusy(true);
+    setError(null);
+    const { error } = await createClient().auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/auth/callback?next=/reset-password`,
+    });
+    setBusy(false);
+    if (error) setError(error.message);
+    else setResetSent(true);
+  }
 
   async function submit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -54,6 +71,20 @@ export function JoinForm({ next }: { next: string }) {
     }
     router.push(next);
     router.refresh();
+  }
+
+  if (resetSent) {
+    return (
+      <div className="border border-night-3 bg-night-2/80 p-7 backdrop-blur-sm">
+        <h2 className="font-display text-3xl">Check your email</h2>
+        <p className="mt-3 leading-relaxed text-starlight-dim">
+          If there&rsquo;s an account for that email, we&rsquo;ve sent a link to set a new password. It can take a minute or two.
+        </p>
+        <button type="button" onClick={() => setResetSent(false)} className="mt-5 text-lamp underline-offset-4 hover:underline">
+          Back to sign in
+        </button>
+      </div>
+    );
   }
 
   if (checkEmail) {
@@ -115,6 +146,15 @@ export function JoinForm({ next }: { next: string }) {
             className={field}
           />
         </label>
+        {mode === "sign-in" && (
+          <button
+            type="button"
+            onClick={(e) => forgot(e.currentTarget.form)}
+            className="-mt-2 text-sm text-starlight-dim underline-offset-4 hover:text-lamp hover:underline"
+          >
+            Forgot password?
+          </button>
+        )}
         {error && (
           <p className="text-sm text-[#ff9b85]" role="alert">
             {error}

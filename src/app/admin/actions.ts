@@ -13,6 +13,22 @@ function slugify(title: string) {
     .replace(/(^-|-$)/g, "");
 }
 
+type Db = Awaited<ReturnType<typeof createClient>>;
+
+/**
+ * A web address (slug) nobody else is using. If "my-post" is taken by another
+ * post, this gives "my-post-2", then "my-post-3", instead of failing the save.
+ */
+async function uniqueSlug(supabase: Db, table: "posts" | "sermons" | "events" | "pages", wanted: string, id: string | null) {
+  const base = slugify(wanted) || table.slice(0, -1);
+  const { data } = await supabase.from(table).select("id, slug").like("slug", `${base}%`);
+  const taken = new Set((data ?? []).filter((r) => r.id !== id).map((r) => r.slug as string));
+  if (!taken.has(base)) return base;
+  let n = 2;
+  while (taken.has(`${base}-${n}`)) n++;
+  return `${base}-${n}`;
+}
+
 function text(formData: FormData, key: string) {
   return ((formData.get(key) as string | null) ?? "").trim();
 }
@@ -73,7 +89,7 @@ export async function savePost(formData: FormData) {
 
   const payload = {
     title,
-    slug: text(formData, "slug") || slugify(title),
+    slug: await uniqueSlug(supabase, "posts", text(formData, "slug") || title, id),
     excerpt: optional(formData, "excerpt"),
     content: (formData.get("content") as string) ?? "",
     cover_image_url: optional(formData, "cover_image_url"),
@@ -217,7 +233,7 @@ export async function saveSermon(formData: FormData) {
 
   const payload = {
     title,
-    slug: text(formData, "slug") || slugify(title),
+    slug: await uniqueSlug(supabase, "sermons", text(formData, "slug") || title, id),
     speaker: text(formData, "speaker") || "Pastor Michael Tomiwa",
     series_id: optional(formData, "series_id"),
     youtube_url: videoId ? `https://www.youtube.com/watch?v=${videoId}` : null,
@@ -255,7 +271,7 @@ export async function saveEvent(formData: FormData) {
 
   const payload = {
     title,
-    slug: text(formData, "slug") || `${slugify(title)}-${startsAt.slice(0, 10)}`,
+    slug: await uniqueSlug(supabase, "events", text(formData, "slug") || `${title}-${startsAt.slice(0, 10)}`, id),
     description: optional(formData, "description"),
     location: optional(formData, "location"),
     starts_at: startsAt,
@@ -338,7 +354,7 @@ export async function savePage(formData: FormData) {
   const title = text(formData, "title");
   const payload = {
     title,
-    slug: text(formData, "slug") || slugify(title),
+    slug: await uniqueSlug(supabase, "pages", text(formData, "slug") || title, id),
     content: (formData.get("content") as string) ?? "",
     published: formData.get("published") === "on",
     nav_label: optional(formData, "nav_label"),

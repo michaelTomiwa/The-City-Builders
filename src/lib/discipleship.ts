@@ -76,6 +76,9 @@ export type Member = {
   role: "member" | "author" | "admin";
   status: "pending" | "active" | "inactive";
   created_at: string;
+  bible_plan_start?: string | null;
+  daily_reminder?: boolean;
+  prayer_need?: string | null;
 };
 
 export const stepKinds: Record<StepKind, { label: string; verb: string; color: string; icon: string }> = {
@@ -148,7 +151,13 @@ export const levels = [
   { name: "Pillar", min: 250, line: "The house leans on lives like yours." },
 ];
 
-/** Growth points: one per step kept, five per assignment the pastor has reviewed. */
+/** Growth points from everything a member does. */
+export function growthPoints(x: { steps: number; reviewed: number; lessons?: number; attendance?: number; bibleDays?: number }) {
+  return x.steps + x.reviewed * 5 + (x.lessons ?? 0) * 3 + (x.attendance ?? 0) * 2 + (x.bibleDays ?? 0);
+}
+
+export const pointsGuide = "1 point for each step kept or Bible day read, 2 for each service attended, 3 for each lesson passed and 5 for each assignment the pastor reviews.";
+
 export function growth(points: number) {
   let index = 0;
   levels.forEach((l, i) => {
@@ -255,3 +264,8 @@ export const templates: { id: string; title: string; objective: string; days: nu
     ]).flat(),
   },
 ];
+
+/** Whole days since a timestamp. */
+export function daysSince(iso: string, now = Date.now()) {
+  return Math.floor((now - Date.parse(iso)) / 86_400_000);
+}

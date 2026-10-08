@@ -1,6 +1,6 @@
 import { cache } from "react";
 import { createClient } from "@/lib/supabase-server";
-import type { Assignment, Checkin, Member, Program, Step, Submission } from "@/lib/discipleship";
+import { growth, growthPoints, streak, type Assignment, type Checkin, type Member, type Program, type Step, type Submission } from "@/lib/discipleship";
 
 /** The signed-in member and their profile (once per request). */
 export const getMember = cache(async () => {
@@ -18,7 +18,7 @@ export const getMemberData = cache(async () => {
   const { supabase, user } = await getMember();
   if (!user) throw new Error("Not signed in");
 
-  const [programs, myPrograms, checkins, assignments, myAssignments, submissions, notices] = await Promise.all([
+  const [programs, myPrograms, checkins, assignments, myAssignments, submissions, notices, lessonsDone, attended, bibleDays] = await Promise.all([
     supabase.from("programs").select("*").eq("status", "published").order("start_date", { ascending: false }),
     supabase.from("program_members").select("program_id").eq("user_id", user.id),
     supabase.from("step_checkins").select("*").eq("user_id", user.id).order("created_at", { ascending: false }),
@@ -26,6 +26,9 @@ export const getMemberData = cache(async () => {
     supabase.from("assignment_members").select("assignment_id").eq("user_id", user.id),
     supabase.from("submissions").select("*").eq("user_id", user.id),
     supabase.from("member_notices").select("*").order("pinned", { ascending: false }).order("created_at", { ascending: false }).limit(5),
+    supabase.from("lesson_progress").select("lesson_id, course_id, completed_at").eq("user_id", user.id),
+    supabase.from("attendance").select("service_id, service_date, created_at").eq("user_id", user.id).order("service_date", { ascending: false }),
+    supabase.from("bible_reading").select("day, read_at").eq("user_id", user.id),
   ]);
 
   const mineP = new Set((myPrograms.data ?? []).map((r) => r.program_id as string));
@@ -50,5 +53,29 @@ export const getMemberData = cache(async () => {
     assignments: assignmentList,
     submissions: (submissions.data ?? []) as Submission[],
     notices: (notices.data ?? []) as { id: string; title: string; body: string; pinned: boolean; created_at: string }[],
+    lessonsDone: (lessonsDone.data ?? []) as { lesson_id: string; course_id: string; completed_at: string }[],
+    attendance: (attended.data ?? []) as { service_id: string; service_date: string; created_at: string }[],
+    bibleDays: (bibleDays.data ?? []) as { day: number; read_at: string }[],
   };
 });
+
+/** Growth level and streak from every kind of activity (steps, lessons, services, Bible reading). */
+export function memberGrowth(d: Awaited<ReturnType<typeof getMemberData>>) {
+  const reviewed = d.submissions.filter((s) => s.status === "reviewed").length;
+  const g = growth(
+    growthPoints({
+      steps: d.checkins.length,
+      reviewed,
+      lessons: d.lessonsDone.length,
+      attendance: d.attendance.length,
+      bibleDays: d.bibleDays.length,
+    })
+  );
+  const activity = [
+    ...d.checkins.map((c) => c.created_at),
+    ...d.lessonsDone.map((l) => l.completed_at),
+    ...d.attendance.map((a) => a.created_at),
+    ...d.bibleDays.map((b) => b.read_at),
+  ];
+  return { g, streakDays: streak(activity), reviewed };
+}

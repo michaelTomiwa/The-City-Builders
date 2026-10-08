@@ -2,6 +2,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase-server";
 import { Panel, Pill } from "@/components/admin/ui";
 import { compact } from "@/lib/blog";
+import { weeklyReport } from "@/lib/report";
 
 function lagos(iso: string) {
   return new Date(iso).toLocaleString("en-US", {
@@ -38,6 +39,7 @@ export default async function AdminDashboard() {
     supabase.from("sermons").select("id", { count: "exact", head: true }),
   ]);
 
+  const report = await weeklyReport(supabase);
   const postRows = posts.data ?? [];
   const totalReads = postRows.reduce((n, p) => n + (p.views ?? 0), 0);
   const totalAmens = postRows.reduce((n, p) => n + (p.likes ?? 0), 0);
@@ -84,7 +86,45 @@ export default async function AdminDashboard() {
         ))}
       </div>
 
-      <dl className="mt-10 grid grid-cols-2 gap-4 lg:grid-cols-4">
+      <div className="mt-10 grid gap-4 lg:grid-cols-[1.4fr_1fr]">
+        <Link href="/admin/report" className="on-night rounded-md bg-night p-5 text-starlight transition-colors hover:bg-night-2">
+          <p className="text-sm text-lamp">Discipleship this week</p>
+          <dl className="mt-3 grid grid-cols-3 gap-3">
+            {[
+              { label: "active members", value: `${report.totals.active}/${report.totals.members}` },
+              { label: "service check-ins", value: report.totals.attendance },
+              { label: "steps and lessons", value: report.totals.steps + report.totals.lessons },
+            ].map((x) => (
+              <div key={x.label}>
+                <dd className="font-display text-3xl">{x.value}</dd>
+                <dt className="text-xs text-starlight-dim">{x.label}</dt>
+              </div>
+            ))}
+          </dl>
+          <p className="mt-3 text-sm text-starlight-dim">
+            {report.quiet.length ? `${report.quiet.length} gone quiet · ` : ""}Open the weekly report →
+          </p>
+        </Link>
+        <Panel>
+          <p className="text-sm text-paper-dim">Follow-ups due</p>
+          {report.followUps.length === 0 ? (
+            <p className="mt-2 text-paper">Nothing due today.</p>
+          ) : (
+            <ul className="mt-2 space-y-1.5 text-sm">
+              {report.followUps.slice(0, 4).map((f) => (
+                <li key={f.id}>
+                  <Link href={`/admin/members/${f.member_id}`} className="font-medium text-paper hover:text-gold-text">
+                    {f.name}
+                  </Link>
+                  <span className="text-paper-dim"> · {f.body.slice(0, 60)}{f.body.length > 60 ? "…" : ""}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </Panel>
+      </div>
+
+      <dl className="mt-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
         {stats.map((s) => (
           <Link key={s.label} href={s.href} className="rounded-md border border-steel bg-white/70 p-5 transition-colors hover:border-gold">
             <dt className="text-sm text-paper-dim">{s.label}</dt>
