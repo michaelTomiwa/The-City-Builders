@@ -423,3 +423,69 @@ export async function deleteCareNote(fd: FormData) {
   check((await supabase.from("care_notes").delete().eq("id", text(fd, "id"))).error);
   revalidatePath(`/admin/members/${text(fd, "member_id")}`);
 }
+
+// Teams ---------------------------------------------------------------------------------
+
+export async function saveTeam(fd: FormData) {
+  const { supabase } = await staff();
+  const id = optional(fd, "id");
+  const name = text(fd, "name");
+  if (!name) throw new Error("Give the team a name.");
+  const base = name.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "") || "team";
+  const { data: taken } = await supabase.from("teams").select("id, slug").like("slug", `${base}%`);
+  const used = new Set((taken ?? []).filter((r) => r.id !== id).map((r) => r.slug as string));
+  let slug = base;
+  for (let n = 2; used.has(slug); n++) slug = `${base}-${n}`;
+  const payload = { name, slug, description: optional(fd, "description"), color: text(fd, "color") || "#f0b44c" };
+  let teamId = id;
+  if (id) check((await supabase.from("teams").update(payload).eq("id", id)).error);
+  else {
+    const { data, error } = await supabase.from("teams").insert(payload).select("id").single();
+    check(error);
+    teamId = data!.id as string;
+  }
+  revalidatePath("/admin/teams", "layout");
+  revalidatePath("/me", "layout");
+  redirect(`/admin/teams/${teamId}${id ? "?tab=settings&saved=1" : "?tab=people"}`);
+}
+
+export async function deleteTeam(fd: FormData) {
+  const { supabase } = await staff();
+  check((await supabase.from("teams").delete().eq("id", text(fd, "id"))).error);
+  revalidatePath("/admin/teams", "layout");
+  revalidatePath("/me", "layout");
+  redirect("/admin/teams");
+}
+
+export async function setTeamMember(fd: FormData) {
+  const { supabase } = await staff();
+  const teamId = text(fd, "team_id");
+  const role = ["lead", "assistant", "member"].includes(text(fd, "role")) ? text(fd, "role") : "member";
+  check(
+    (
+      await supabase
+        .from("team_members")
+        .upsert({ team_id: teamId, user_id: text(fd, "user_id"), role, title: optional(fd, "title") }, { onConflict: "team_id,user_id" })
+    ).error
+  );
+  revalidatePath(`/admin/teams/${teamId}`);
+  revalidatePath("/me", "layout");
+}
+
+export async function removeTeamMember(fd: FormData) {
+  const { supabase } = await staff();
+  const teamId = text(fd, "team_id");
+  check((await supabase.from("team_members").delete().eq("team_id", teamId).eq("user_id", text(fd, "user_id"))).error);
+  revalidatePath(`/admin/teams/${teamId}`);
+  revalidatePath("/me", "layout");
+}
+
+export async function replyToReport(fd: FormData) {
+  const { supabase } = await staff();
+  const teamId = text(fd, "team_id");
+  check(
+    (await supabase.from("team_reports").update({ pastor_reply: optional(fd, "reply"), replied_at: new Date().toISOString() }).eq("id", text(fd, "id"))).error
+  );
+  revalidatePath(`/admin/teams/${teamId}`);
+  revalidatePath("/me", "layout");
+}

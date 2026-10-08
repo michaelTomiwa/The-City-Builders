@@ -79,6 +79,8 @@ export type Member = {
   bible_plan_start?: string | null;
   daily_reminder?: boolean;
   prayer_need?: string | null;
+  invite_code?: string | null;
+  invited_by?: string | null;
 };
 
 export const stepKinds: Record<StepKind, { label: string; verb: string; color: string; icon: string }> = {
@@ -152,11 +154,12 @@ export const levels = [
 ];
 
 /** Growth points from everything a member does. */
-export function growthPoints(x: { steps: number; reviewed: number; lessons?: number; attendance?: number; bibleDays?: number }) {
-  return x.steps + x.reviewed * 5 + (x.lessons ?? 0) * 3 + (x.attendance ?? 0) * 2 + (x.bibleDays ?? 0);
+export function growthPoints(x: { steps: number; reviewed: number; lessons?: number; attendance?: number; bibleDays?: number; invites?: number }) {
+  return x.steps + x.reviewed * 5 + (x.lessons ?? 0) * 3 + (x.attendance ?? 0) * 2 + (x.bibleDays ?? 0) + (x.invites ?? 0) * 5;
 }
 
-export const pointsGuide = "1 point for each step kept or Bible day read, 2 for each service attended, 3 for each lesson passed and 5 for each assignment the pastor reviews.";
+export const pointsGuide =
+  "1 point for each step kept or Bible day read, 2 for each service attended, 3 for each lesson passed, and 5 for each assignment the pastor reviews or friend you invite who joins.";
 
 export function growth(points: number) {
   let index = 0;
