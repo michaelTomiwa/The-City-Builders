@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { Stars } from "@/components/site/stars";
 import { MemberNav } from "@/components/members/member-nav";
 import { getMember, getMemberData } from "@/lib/member-data";
-import { firstName, initials } from "@/lib/discipleship";
+import { firstName, initials, lagosToday } from "@/lib/discipleship";
 import { signOutMember } from "./actions";
 
 export const metadata: Metadata = {
@@ -48,6 +48,12 @@ export default async function MemberLayout({ children }: LayoutProps<"/me">) {
   }
 
   const { assignments, submissions } = await getMemberData();
+  const { supabase } = await getMember();
+  const { count: memoryDue } = await supabase
+    .from("memory_verses")
+    .select("id", { count: "exact", head: true })
+    .eq("user_id", user.id)
+    .lte("due_on", lagosToday());
   const handedIn = new Map(submissions.map((s) => [s.assignment_id, s.status]));
   const toDo = assignments.filter((a) => !handedIn.has(a.id) || handedIn.get(a.id) === "needs_work").length;
 
@@ -70,7 +76,7 @@ export default async function MemberLayout({ children }: LayoutProps<"/me">) {
             </form>
           </div>
           <div className="mt-6">
-            <MemberNav badges={{ assignments: toDo }} />
+            <MemberNav badges={{ assignments: toDo, memory: memoryDue ?? 0 }} />
           </div>
         </div>
       </div>

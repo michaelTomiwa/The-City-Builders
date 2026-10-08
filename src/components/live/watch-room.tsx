@@ -7,6 +7,7 @@ import { STREAMS_URL, liveService, serviceOccurrences } from "@/lib/schedule";
 import { verses } from "@/lib/verses";
 import { LiteYouTube } from "@/components/site/lite-youtube";
 import { NotifyMe } from "@/components/site/notify-me";
+import { ImHere } from "@/components/members/im-here";
 import { PrayingNow, usePrayingNow } from "./praying-now";
 
 export type Replay = { id: string; title: string; thumbnail: string } | null;
@@ -162,6 +163,7 @@ export function WatchRoom({ replay }: { replay: Replay }) {
 
         <div className="mt-5 flex flex-wrap items-center gap-x-6 gap-y-4">
           {!live && <NotifyMe />}
+          {live && <ImHere />}
           <p className="text-sm text-starlight-dim">
             {live ? (
               <>

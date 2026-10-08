@@ -38,7 +38,14 @@ export default async function JoinPage({ searchParams }: PageProps<"/join">) {
             ))}
           </ul>
         </div>
-        <JoinForm next={next} />
+        <div>
+          {typeof params.error === "string" && (
+            <p className="mb-4 rounded-sm border border-[#ff9b85]/40 bg-[#ff9b85]/10 px-4 py-2 text-sm text-[#ffb4a3]" role="alert">
+              {params.error}
+            </p>
+          )}
+          <JoinForm next={next} />
+        </div>
       </div>
     </div>
   );

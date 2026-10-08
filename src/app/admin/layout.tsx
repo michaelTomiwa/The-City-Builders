@@ -36,16 +36,17 @@ export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
     );
   }
 
-  const [{ count: pendingComments }, { count: newPrayers }, { count: pendingMembers }, { count: toReview }] = await Promise.all([
+  const [{ count: pendingComments }, { count: newPrayers }, { count: pendingMembers }, { count: toReview }, { count: newTestimonies }] = await Promise.all([
     supabase.from("post_comments").select("id", { count: "exact", head: true }).eq("approved", false),
     supabase.from("prayer_requests").select("id", { count: "exact", head: true }).eq("status", "new"),
     supabase.from("profiles").select("id", { count: "exact", head: true }).eq("status", "pending"),
     supabase.from("submissions").select("id", { count: "exact", head: true }).eq("status", "submitted"),
+    supabase.from("testimonies").select("id", { count: "exact", head: true }).eq("status", "pending"),
   ]);
 
   return (
     <div className="min-h-screen bg-[#f1f2f4] lg:flex">
-      <aside className="on-night flex shrink-0 flex-col bg-night text-starlight lg:sticky lg:top-0 lg:h-screen lg:w-64">
+      <aside className="on-night flex shrink-0 flex-col bg-night text-starlight lg:sticky lg:top-0 lg:h-screen lg:w-64 lg:overflow-y-auto">
         <div className="flex items-center justify-between px-5 py-5 lg:block">
           <Link href="/admin" className="flex items-center gap-2.5">
             <LogoMark className="h-8 w-8 text-lamp" />
@@ -70,6 +71,7 @@ export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
             prayers: newPrayers ?? 0,
             members: pendingMembers ?? 0,
             submissions: toReview ?? 0,
+            testimonies: newTestimonies ?? 0,
           }}
         />
 

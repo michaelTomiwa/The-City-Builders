@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { createClient } from "@/lib/supabase-server";
 import { AdminHeader, Empty, Pill, Tabs, smallButton } from "@/components/admin/ui";
 import { displayName, growth, initials, lagosDateTime, streak, type Member } from "@/lib/discipleship";
@@ -73,7 +74,9 @@ export default async function AdminMembers({ searchParams }: PageProps<"/admin/m
                   <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gold/20 text-sm font-medium text-gold-text">{initials(p)}</span>
                   <span className="min-w-0">
                     <span className="flex flex-wrap items-center gap-2">
-                      <span className="font-medium text-paper">{displayName(p)}</span>
+                      <Link href={`/admin/members/${p.id}`} className="font-medium text-paper hover:text-gold-text">
+                        {displayName(p)}
+                      </Link>
                       {p.role !== "member" && <Pill tone="blue">{p.role === "admin" ? "Admin" : "Author"}</Pill>}
                     </span>
                     <span className="block truncate text-sm text-paper-dim">

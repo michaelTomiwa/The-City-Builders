@@ -108,7 +108,12 @@ const firstWatch = [
 ];
 
 export default async function HomePage() {
-  const [{ posts, events }, settings] = await Promise.all([getHomeData(), getSiteSettings()]);
+  const [{ posts, events }, settings, { data: testimonyRows }] = await Promise.all([
+    getHomeData(),
+    getSiteSettings(),
+    supabase.from("testimonies").select("id, title, body, display_name").eq("status", "approved").order("created_at", { ascending: false }).limit(3),
+  ]);
+  const testimonies = (testimonyRows ?? []) as { id: string; title: string; body: string; display_name: string | null }[];
 
   return (
     <>
@@ -225,6 +230,28 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
+
+      {testimonies.length > 0 && (
+        <section className="on-night bg-night text-starlight">
+          <div className="mx-auto max-w-6xl px-6 py-20">
+            <div className="flex flex-wrap items-end justify-between gap-4">
+              <h2 className="font-display text-4xl sm:text-5xl">What God is doing</h2>
+              <Link href="/testimonies" className="text-lamp underline-offset-4 hover:underline">
+                Read every testimony
+              </Link>
+            </div>
+            <ul className="mt-10 grid gap-6 md:grid-cols-3">
+              {testimonies.map((t) => (
+                <li key={t.id} className="border-t border-lamp/40 pt-5">
+                  <p className="font-display text-2xl leading-snug">{t.title}</p>
+                  <p className="mt-3 line-clamp-4 leading-relaxed text-starlight-dim">{t.body}</p>
+                  <p className="mt-3 text-sm text-lamp">{t.display_name ?? "A City Builder"}</p>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </section>
+      )}
 
       {/* Daily rhythm */}
       <section className="border-t border-steel">

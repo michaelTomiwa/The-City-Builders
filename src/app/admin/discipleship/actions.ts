@@ -237,3 +237,189 @@ export async function deleteNotice(fd: FormData) {
   revalidatePath("/admin/notices");
   revalidatePath("/me", "layout");
 }
+
+// Discipleship School ------------------------------------------------------------------
+
+function slugOf(title: string) {
+  return title.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "") || "course";
+}
+
+export async function saveCourse(fd: FormData) {
+  const { supabase } = await staff();
+  const id = optional(fd, "id");
+  const title = text(fd, "title");
+  if (!title) throw new Error("Give the course a title.");
+
+  // a web address no other course is using
+  const base = slugOf(text(fd, "slug") || title);
+  const { data: taken } = await supabase.from("courses").select("id, slug").like("slug", `${base}%`);
+  const used = new Set((taken ?? []).filter((r) => r.id !== id).map((r) => r.slug as string));
+  let slug = base;
+  for (let n = 2; used.has(slug); n++) slug = `${base}-${n}`;
+
+  const payload = {
+    title,
+    slug,
+    summary: optional(fd, "summary"),
+    cover_image_url: optional(fd, "cover_image_url"),
+    status: ["draft", "published", "archived"].includes(text(fd, "status")) ? text(fd, "status") : "draft",
+    sort: Number(text(fd, "sort")) || 0,
+    updated_at: new Date().toISOString(),
+  };
+
+  let courseId = id;
+  if (id) check((await supabase.from("courses").update(payload).eq("id", id)).error);
+  else {
+    const { data, error } = await supabase.from("courses").insert(payload).select("id").single();
+    check(error);
+    courseId = data!.id as string;
+  }
+
+  type InLesson = { id?: string; title: string; video_url: string | null; scripture: string | null; body: string | null; questions: { question: string; options: string[]; answer: number; explanation: string | null }[] };
+  let lessons: InLesson[] = [];
+  try {
+    lessons = JSON.parse(text(fd, "lessons") || "[]");
+  } catch {
+    lessons = [];
+  }
+  lessons = lessons.filter((l) => l.title?.trim());
+
+  const { data: existing } = await supabase.from("lessons").select("id").eq("course_id", courseId!);
+  const keep = new Set(lessons.filter((l) => l.id).map((l) => l.id));
+  const removed = (existing ?? []).map((r) => r.id as string).filter((x) => !keep.has(x));
+  if (removed.length) check((await supabase.from("lessons").delete().in("id", removed)).error);
+
+  for (const [i, l] of lessons.entries()) {
+    const row = {
+      course_id: courseId!,
+      sort: i,
+      title: l.title.trim(),
+      video_url: l.video_url?.trim() || null,
+      scripture: l.scripture?.trim() || null,
+      body: l.body?.trim() || null,
+    };
+    let lessonId = l.id;
+    if (lessonId) check((await supabase.from("lessons").update(row).eq("id", lessonId)).error);
+    else {
+      const { data, error } = await supabase.from("lessons").insert(row).select("id").single();
+      check(error);
+      lessonId = data!.id as string;
+    }
+    check((await supabase.from("quiz_questions").delete().eq("lesson_id", lessonId!)).error);
+    const qs = (l.questions ?? [])
+      .map((q) => ({ ...q, options: (q.options ?? []).map((o) => o.trim()).filter(Boolean) }))
+      .filter((q) => q.question?.trim() && q.options.length >= 2)
+      .map((q, qi) => ({
+        lesson_id: lessonId!,
+        sort: qi,
+        question: q.question.trim(),
+        options: q.options,
+        answer: Math.min(Math.max(0, q.answer ?? 0), q.options.length - 1),
+        explanation: q.explanation?.trim() || null,
+      }));
+    if (qs.length) check((await supabase.from("quiz_questions").insert(qs)).error);
+  }
+
+  revalidatePath("/admin/school");
+  revalidatePath("/me", "layout");
+  redirect(`/admin/school/${courseId}?saved=1`);
+}
+
+export async function deleteCourse(fd: FormData) {
+  const { supabase } = await staff();
+  check((await supabase.from("courses").delete().eq("id", text(fd, "id"))).error);
+  revalidatePath("/admin/school");
+  revalidatePath("/me", "layout");
+  redirect("/admin/school");
+}
+
+// Prayer partners ----------------------------------------------------------------------
+
+export async function pairEveryone() {
+  const { supabase } = await staff();
+  const [{ data: people }, { data: pairs }] = await Promise.all([
+    supabase.from("profiles").select("id").eq("status", "active").eq("role", "member"),
+    supabase.from("prayer_partners").select("user_a, user_b"),
+  ]);
+  const paired = new Set((pairs ?? []).flatMap((p) => [p.user_a as string, p.user_b as string]));
+  const free = (people ?? []).map((p) => p.id as string).filter((id) => !paired.has(id));
+  // shuffle, then pair neighbours
+  for (let i = free.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [free[i], free[j]] = [free[j], free[i]];
+  }
+  const rows = [];
+  for (let i = 0; i + 1 < free.length; i += 2) rows.push({ user_a: free[i], user_b: free[i + 1] });
+  if (rows.length) check((await supabase.from("prayer_partners").insert(rows)).error);
+  revalidatePath("/admin/partners");
+  redirect(`/admin/partners?paired=${rows.length}${free.length % 2 ? "&odd=1" : ""}`);
+}
+
+export async function pairTwo(fd: FormData) {
+  const { supabase } = await staff();
+  const a = text(fd, "user_a");
+  const b = text(fd, "user_b");
+  if (!a || !b || a === b) throw new Error("Choose two different people.");
+  check((await supabase.from("prayer_partners").insert({ user_a: a, user_b: b })).error);
+  revalidatePath("/admin/partners");
+}
+
+export async function unpair(fd: FormData) {
+  const { supabase } = await staff();
+  check((await supabase.from("prayer_partners").delete().eq("id", text(fd, "id"))).error);
+  revalidatePath("/admin/partners");
+}
+
+// Testimonies ---------------------------------------------------------------------------
+
+export async function reviewTestimony(fd: FormData) {
+  const { supabase } = await staff();
+  const status = ["approved", "declined", "pending"].includes(text(fd, "status")) ? text(fd, "status") : "pending";
+  check((await supabase.from("testimonies").update({ status, reviewed_at: new Date().toISOString() }).eq("id", text(fd, "id"))).error);
+  revalidatePath("/admin/testimonies");
+  revalidatePath("/testimonies");
+  revalidatePath("/");
+}
+
+export async function deleteTestimony(fd: FormData) {
+  const { supabase } = await staff();
+  check((await supabase.from("testimonies").delete().eq("id", text(fd, "id"))).error);
+  revalidatePath("/admin/testimonies");
+  revalidatePath("/testimonies");
+  revalidatePath("/");
+}
+
+// Pastoral care --------------------------------------------------------------------------
+
+export async function addCareNote(fd: FormData) {
+  const { supabase } = await staff();
+  const memberId = text(fd, "member_id");
+  const body = text(fd, "body");
+  if (!body) throw new Error("Write the note first.");
+  const tags = ["note", "new-believer", "struggling", "needs-visit", "celebrate", "prayer"];
+  check(
+    (
+      await supabase.from("care_notes").insert({
+        member_id: memberId,
+        body,
+        tag: tags.includes(text(fd, "tag")) ? text(fd, "tag") : "note",
+        follow_up_on: optional(fd, "follow_up_on"),
+      })
+    ).error
+  );
+  revalidatePath(`/admin/members/${memberId}`);
+  revalidatePath("/admin");
+}
+
+export async function toggleCareDone(fd: FormData) {
+  const { supabase } = await staff();
+  check((await supabase.from("care_notes").update({ done: text(fd, "done") !== "true" }).eq("id", text(fd, "id"))).error);
+  revalidatePath(`/admin/members/${text(fd, "member_id")}`);
+  revalidatePath("/admin");
+}
+
+export async function deleteCareNote(fd: FormData) {
+  const { supabase } = await staff();
+  check((await supabase.from("care_notes").delete().eq("id", text(fd, "id"))).error);
+  revalidatePath(`/admin/members/${text(fd, "member_id")}`);
+}

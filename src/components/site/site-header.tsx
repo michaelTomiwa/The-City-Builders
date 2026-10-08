@@ -34,16 +34,16 @@ export function SiteHeader({
         <div className="flex items-center gap-4">
           <Link href="/" className="group flex items-center gap-2.5">
             <BrandLogo src={logoUrl} className="h-9 w-9 text-lamp transition-transform duration-500 group-hover:-translate-y-0.5" />
-            <span className="font-display text-xl text-starlight">
+            <span className="whitespace-nowrap font-display text-xl text-starlight">
               City Builders
             </span>
           </Link>
-          <span className="hidden sm:block">
+          <span className="hidden whitespace-nowrap sm:block">
             <LiveBadge />
           </span>
         </div>
 
-        <nav className="hidden items-center gap-6 lg:flex xl:gap-8">
+        <nav className="hidden items-center gap-5 whitespace-nowrap lg:flex xl:gap-6">
           {links.map((link) => (
             <Link
               key={link.href}
