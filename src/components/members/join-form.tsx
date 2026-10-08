@@ -9,7 +9,7 @@ const field =
   "mt-1.5 h-11 w-full rounded-sm border border-night-3 bg-night/60 px-3 text-starlight outline-none placeholder:text-starlight-dim/60 focus:border-lamp";
 
 /** Sign in, or create a member account (the pastor approves new members). */
-export function JoinForm({ next }: { next: string }) {
+export function JoinForm({ next, referral = null }: { next: string; referral?: string | null }) {
   const router = useRouter();
   const [mode, setMode] = useState<"sign-in" | "join">("join");
   const [busy, setBusy] = useState(false);
@@ -54,7 +54,11 @@ export function JoinForm({ next }: { next: string }) {
         email,
         password,
         options: {
-          data: { full_name: String(form.get("full_name") ?? "").trim(), phone: String(form.get("phone") ?? "").trim() },
+          data: {
+            full_name: String(form.get("full_name") ?? "").trim(),
+            phone: String(form.get("phone") ?? "").trim(),
+            ...(referral ? { ref: referral } : {}),
+          },
           emailRedirectTo: `${window.location.origin}${next}`,
         },
       });

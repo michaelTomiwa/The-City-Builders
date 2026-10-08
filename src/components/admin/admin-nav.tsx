@@ -25,6 +25,7 @@ const groups = [
     label: "Discipleship",
     items: [
       { href: "/admin/members", label: "Members", badge: "members" as const },
+      { href: "/admin/teams", label: "Teams" },
       { href: "/admin/programs", label: "Programmes" },
       { href: "/admin/school", label: "School" },
       { href: "/admin/assignments", label: "Assignments", badge: "submissions" as const },

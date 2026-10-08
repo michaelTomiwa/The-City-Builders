@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Stars } from "@/components/site/stars";
 import { JoinForm } from "@/components/members/join-form";
+import { supabase } from "@/lib/supabase";
 
 export const metadata: Metadata = {
   title: "Members",
@@ -10,6 +11,8 @@ export const metadata: Metadata = {
 export default async function JoinPage({ searchParams }: PageProps<"/join">) {
   const params = await searchParams;
   const next = typeof params.next === "string" && params.next.startsWith("/me") ? params.next : "/me";
+  const ref = typeof params.ref === "string" ? params.ref.slice(0, 16) : null;
+  const { data: inviter } = ref ? await supabase.rpc("inviter_name", { p_code: ref }) : { data: null };
 
   return (
     <div className="on-night sky relative overflow-hidden text-starlight">
@@ -44,7 +47,12 @@ export default async function JoinPage({ searchParams }: PageProps<"/join">) {
               {params.error}
             </p>
           )}
-          <JoinForm next={next} />
+          {inviter && (
+            <p className="mb-4 rounded-sm border border-lamp/40 bg-lamp/10 px-4 py-3 text-sm text-starlight">
+              <span className="text-lamp">{String(inviter)}</span> invited you to build with the City Builders.
+            </p>
+          )}
+          <JoinForm next={next} referral={inviter ? ref : null} />
         </div>
       </div>
     </div>

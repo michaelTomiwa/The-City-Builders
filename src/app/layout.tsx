@@ -4,6 +4,7 @@ import "./globals.css";
 import { SiteHeader } from "@/components/site/site-header";
 import { SiteFooter } from "@/components/site/site-footer";
 import { getSiteSettings } from "@/lib/settings";
+import { siteUrl } from "@/lib/site";
 import { MotionProvider } from "@/components/site/motion-provider";
 import { supabase } from "@/lib/supabase";
 import { PublicOnly } from "@/components/site/public-only";
@@ -22,11 +23,6 @@ const hanken = Hanken_Grotesk({
   subsets: ["latin"],
 });
 
-const siteUrl =
-  process.env.NEXT_PUBLIC_SITE_URL ??
-  (process.env.VERCEL_PROJECT_PRODUCTION_URL
-    ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
-    : "http://localhost:3000");
 
 const description =
   "Pray with Pastor Michael Tomiwa and The City Builders: Night Watch at 11 PM and Morning Prayers at 7 AM, Lagos time, every day. Sermons, prayer and the word for your season.";

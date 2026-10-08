@@ -39,6 +39,9 @@ export default async function AdminMember({ params }: PageProps<"/admin/members/
   const partnerId = (partners.data ?? []).map((p) => (p.user_a === id ? p.user_b : p.user_a))[0];
   const { data: partner } = partnerId ? await supabase.from("profiles").select("full_name, email").eq("id", partnerId).maybeSingle() : { data: null };
   const today = lagosToday();
+  const { data: teamRows } = await supabase.from("team_members").select("role, title, teams(id, name, color)").eq("user_id", id);
+  const memberTeams = (teamRows ?? []) as unknown as { role: string; title: string | null; teams: { id: string; name: string; color: string } | null }[];
+  const { count: invited } = await supabase.from("profiles").select("id", { count: "exact", head: true }).eq("invited_by", id);
   const careNotes = (notes.data ?? []) as { id: string; tag: string; body: string; follow_up_on: string | null; done: boolean; created_at: string }[];
 
   const stats = [
@@ -236,6 +239,27 @@ export default async function AdminMember({ params }: PageProps<"/admin/members/
                 ))}
               </ul>
             )}
+          </Panel>
+          <Panel>
+            <h2 className="font-medium text-paper">Teams</h2>
+            {memberTeams.length === 0 ? (
+              <p className="mt-2 text-sm text-paper-dim">Not on a team yet.</p>
+            ) : (
+              <ul className="mt-2 space-y-1 text-sm">
+                {memberTeams
+                  .filter((t) => t.teams)
+                  .map((t) => (
+                    <li key={t.teams!.id} className="flex items-center justify-between gap-2">
+                      <Link href={`/admin/teams/${t.teams!.id}`} className="flex items-center gap-2 text-paper hover:text-gold-text">
+                        <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: t.teams!.color }} />
+                        {t.teams!.name}
+                      </Link>
+                      <span className="text-xs text-paper-dim">{t.title || (t.role === "lead" ? "Team lead" : t.role === "assistant" ? "Assistant lead" : "Member")}</span>
+                    </li>
+                  ))}
+              </ul>
+            )}
+            <p className="mt-3 text-xs text-paper-dim">Invited {invited ?? 0} {invited === 1 ? "person" : "people"} to the site</p>
           </Panel>
           <Panel>
             <h2 className="font-medium text-paper">Prayer partner</h2>

@@ -18,7 +18,7 @@ export const getMemberData = cache(async () => {
   const { supabase, user } = await getMember();
   if (!user) throw new Error("Not signed in");
 
-  const [programs, myPrograms, checkins, assignments, myAssignments, submissions, notices, lessonsDone, attended, bibleDays] = await Promise.all([
+  const [programs, myPrograms, checkins, assignments, myAssignments, submissions, notices, lessonsDone, attended, bibleDays, invites] = await Promise.all([
     supabase.from("programs").select("*").eq("status", "published").order("start_date", { ascending: false }),
     supabase.from("program_members").select("program_id").eq("user_id", user.id),
     supabase.from("step_checkins").select("*").eq("user_id", user.id).order("created_at", { ascending: false }),
@@ -29,6 +29,7 @@ export const getMemberData = cache(async () => {
     supabase.from("lesson_progress").select("lesson_id, course_id, completed_at").eq("user_id", user.id),
     supabase.from("attendance").select("service_id, service_date, created_at").eq("user_id", user.id).order("service_date", { ascending: false }),
     supabase.from("bible_reading").select("day, read_at").eq("user_id", user.id),
+    supabase.rpc("my_invites"),
   ]);
 
   const mineP = new Set((myPrograms.data ?? []).map((r) => r.program_id as string));
@@ -56,6 +57,7 @@ export const getMemberData = cache(async () => {
     lessonsDone: (lessonsDone.data ?? []) as { lesson_id: string; course_id: string; completed_at: string }[],
     attendance: (attended.data ?? []) as { service_id: string; service_date: string; created_at: string }[],
     bibleDays: (bibleDays.data ?? []) as { day: number; read_at: string }[],
+    invites: (invites.data ?? []) as { full_name: string | null; status: string; joined_at: string }[],
   };
 });
 
@@ -69,6 +71,7 @@ export function memberGrowth(d: Awaited<ReturnType<typeof getMemberData>>) {
       lessons: d.lessonsDone.length,
       attendance: d.attendance.length,
       bibleDays: d.bibleDays.length,
+      invites: d.invites.filter((i) => i.status === "active").length,
     })
   );
   const activity = [

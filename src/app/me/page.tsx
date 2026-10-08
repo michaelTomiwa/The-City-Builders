@@ -14,6 +14,7 @@ import { ProgressRing } from "@/components/members/progress-ring";
 import { ImHere } from "@/components/members/im-here";
 import { PartnerCard, type Partner } from "@/components/members/partner-card";
 import { savePrayerNeed } from "./actions";
+import { getMyTeamTasks, getMyTeams } from "@/lib/teams";
 
 function greeting() {
   const hour = (new Date().getUTCHours() + 1) % 24;
@@ -31,6 +32,18 @@ export default async function TodayPage() {
   const { profile, supabase } = await getMember();
   const { data: partnerRows } = await supabase.rpc("my_partner");
   const partner = ((partnerRows ?? []) as Partner[])[0] ?? null;
+  const [teamTasks, myTeams] = await Promise.all([getMyTeamTasks(), getMyTeams()]);
+  const { data: teamUpdates } = myTeams.length
+    ? await supabase
+        .from("team_posts")
+        .select("id, body, author_name, created_at, team_id")
+        .in("team_id", myTeams.map((t) => t.team.id))
+        .eq("kind", "update")
+        .order("created_at", { ascending: false })
+        .limit(1)
+    : { data: [] };
+  const latestUpdate = (teamUpdates ?? [])[0] as { id: string; body: string; author_name: string | null; team_id: string } | undefined;
+  const updateTeam = latestUpdate ? myTeams.find((t) => t.team.id === latestUpdate.team_id)?.team : undefined;
   const data = await getMemberData();
   const { programs, steps, checkins, assignments, submissions, notices } = data;
   const today = lagosToday();
@@ -184,6 +197,39 @@ export default async function TodayPage() {
                   </div>
                 </article>
               ))}
+            </section>
+          )}
+
+          {(teamTasks.length > 0 || latestUpdate) && (
+            <section className="rounded-md border border-steel bg-white p-5">
+              <div className="flex items-baseline justify-between">
+                <h2 className="font-display text-xl text-paper">Your team</h2>
+                <Link href="/me/teams" className="text-sm text-gold-text hover:underline">
+                  Teams
+                </Link>
+              </div>
+              {latestUpdate && updateTeam && (
+                <Link href={`/me/teams/${updateTeam.slug}`} className="mt-3 block border-l-2 pl-3" style={{ borderColor: updateTeam.color }}>
+                  <span className="text-xs text-paper-dim">
+                    {updateTeam.name} · {latestUpdate.author_name ?? "Lead"}
+                  </span>
+                  <span className="mt-0.5 line-clamp-3 block text-sm text-paper">{latestUpdate.body}</span>
+                </Link>
+              )}
+              {teamTasks.length > 0 && (
+                <ul className="mt-4 space-y-2">
+                  {teamTasks.slice(0, 4).map((t) => (
+                    <li key={t.task_id}>
+                      <Link href={`/me/teams/${t.teams?.slug}?tab=tasks`} className="group block">
+                        <span className="block text-sm font-medium text-paper group-hover:text-gold-text">{t.team_tasks?.title}</span>
+                        <span className={t.status === "redo" ? "text-xs text-[#a3402b]" : "text-xs text-paper-dim"}>
+                          {t.status === "redo" ? "Your lead asked for another go" : t.teams?.name}
+                        </span>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </section>
           )}
 

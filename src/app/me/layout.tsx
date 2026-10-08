@@ -1,9 +1,11 @@
+import Link from "next/link";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { Stars } from "@/components/site/stars";
 import { MemberNav } from "@/components/members/member-nav";
 import { getMember, getMemberData } from "@/lib/member-data";
 import { firstName, initials, lagosToday } from "@/lib/discipleship";
+import { getMyTeamTasks } from "@/lib/teams";
 import { signOutMember } from "./actions";
 
 export const metadata: Metadata = {
@@ -49,6 +51,7 @@ export default async function MemberLayout({ children }: LayoutProps<"/me">) {
 
   const { assignments, submissions } = await getMemberData();
   const { supabase } = await getMember();
+  const teamTasks = await getMyTeamTasks();
   const { count: memoryDue } = await supabase
     .from("memory_verses")
     .select("id", { count: "exact", head: true })
@@ -71,12 +74,17 @@ export default async function MemberLayout({ children }: LayoutProps<"/me">) {
                 <p className="font-display text-xl leading-tight">{profile?.full_name ?? user.email}</p>
               </div>
             </div>
-            <form action={signOutMember}>
-              <button className="text-sm text-starlight-dim hover:text-lamp">Sign out</button>
-            </form>
+            <div className="flex items-center gap-4">
+              <Link href="/me/invite" className="rounded-sm border border-lamp/60 px-3 py-1.5 text-sm text-lamp hover:bg-lamp hover:text-ink">
+                Invite a friend
+              </Link>
+              <form action={signOutMember}>
+                <button className="text-sm text-starlight-dim hover:text-lamp">Sign out</button>
+              </form>
+            </div>
           </div>
           <div className="mt-6">
-            <MemberNav badges={{ assignments: toDo, memory: memoryDue ?? 0 }} />
+            <MemberNav badges={{ assignments: toDo, memory: memoryDue ?? 0, teams: teamTasks.length }} />
           </div>
         </div>
       </div>
