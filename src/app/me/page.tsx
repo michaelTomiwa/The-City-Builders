@@ -42,6 +42,7 @@ export default async function TodayPage() {
         .order("created_at", { ascending: false })
         .limit(1)
     : { data: [] };
+  const { data: convo } = await supabase.from("conversations").select("last_body, last_from_pastor, member_unread").eq("member_id", profile?.id ?? "").maybeSingle();
   const latestUpdate = (teamUpdates ?? [])[0] as { id: string; body: string; author_name: string | null; team_id: string } | undefined;
   const updateTeam = latestUpdate ? myTeams.find((t) => t.team.id === latestUpdate.team_id)?.team : undefined;
   const data = await getMemberData();
@@ -94,6 +95,26 @@ export default async function TodayPage() {
       <ImHere tone="paper" className="mt-6" />
 
       {/* Growth */}
+      {convo && convo.member_unread > 0 && convo.last_from_pastor && (
+        <Link
+          href="/me/messages"
+          className="mt-8 flex items-center gap-4 rounded-md border border-gold/60 bg-gold/10 px-5 py-4 transition-colors hover:bg-gold/20"
+        >
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gold text-ink" aria-hidden="true">
+            <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8">
+              <path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z" strokeLinejoin="round" />
+            </svg>
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block text-sm font-medium text-gold-text">
+              New message from Pastor Michael{convo.member_unread > 1 ? ` (${convo.member_unread})` : ""}
+            </span>
+            <span className="block truncate text-paper">{convo.last_body}</span>
+          </span>
+          <span className="hidden shrink-0 text-sm font-medium text-gold-text sm:block">Open and reply</span>
+        </Link>
+      )}
+
       <div className="mt-8 grid gap-4 sm:grid-cols-3">
         <div className="rounded-md border border-steel bg-white p-5">
           <p className="text-sm text-paper-dim">Streak</p>

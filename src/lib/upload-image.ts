@@ -10,14 +10,15 @@ import { createClient } from "@/lib/supabase-browser";
 const MAX_WIDTH = 1600;
 const SMALL_ENOUGH = 400 * 1024;
 
-async function shrink(file: File, keepOriginal: boolean): Promise<Blob> {
+/** Scales a photo down to at most maxWidth and re-saves it as JPEG when it is large. */
+export async function shrinkImage(file: File, maxWidth = MAX_WIDTH, keepOriginal = false): Promise<Blob> {
   if (file.type === "image/gif" || keepOriginal) return file;
   const bitmap = await createImageBitmap(file).catch(() => null);
-  if (!bitmap || (bitmap.width <= MAX_WIDTH && file.size <= SMALL_ENOUGH)) {
+  if (!bitmap || (bitmap.width <= maxWidth && file.size <= SMALL_ENOUGH)) {
     bitmap?.close();
     return file;
   }
-  const scale = Math.min(1, MAX_WIDTH / bitmap.width);
+  const scale = Math.min(1, maxWidth / bitmap.width);
   const canvas = document.createElement("canvas");
   canvas.width = Math.round(bitmap.width * scale);
   canvas.height = Math.round(bitmap.height * scale);
@@ -28,7 +29,7 @@ async function shrink(file: File, keepOriginal: boolean): Promise<Blob> {
 
 export async function uploadImage(file: File, folder = "uploads", keepOriginal = false) {
   if (!file.type.startsWith("image/")) throw new Error("That file isn't an image.");
-  const blob = await shrink(file, keepOriginal);
+  const blob = await shrinkImage(file, MAX_WIDTH, keepOriginal);
   if (blob.size > 10 * 1024 * 1024) throw new Error("That image is over 10 MB. Try a smaller one.");
 
   const ext = blob.type === "image/jpeg" ? "jpg" : (file.name.split(".").pop() ?? "jpg").toLowerCase();

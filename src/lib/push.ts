@@ -105,3 +105,25 @@ export async function sendWeeklyReportAlert(day: string) {
   await finish(key, sent);
   return { sent };
 }
+
+type UserTarget = Target & { user_id: string };
+
+/** A new-message alert to particular members' phones, or to every staff phone when users is "staff". */
+export async function sendMessagePush(users: string[] | "staff", payload: (userId: string | null) => Omit<Payload, "tag"> | null, tag: string) {
+  if (!pushConfigured()) return { sent: 0 };
+  try {
+    const { data, error } =
+      users === "staff"
+        ? await supabase.rpc("staff_push_targets", { p_secret: secret() })
+        : await supabase.rpc("user_push_targets", { p_secret: secret(), p_users: users });
+    if (error) return { sent: 0 };
+    const rows = (data ?? []) as (Target & Partial<UserTarget>)[];
+    const { sent } = await deliver(rows, (r) => {
+      const p = payload(r.user_id ?? null);
+      return p ? { ...p, tag } : null;
+    });
+    return { sent };
+  } catch {
+    return { sent: 0 };
+  }
+}

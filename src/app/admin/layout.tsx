@@ -36,12 +36,13 @@ export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
     );
   }
 
-  const [{ count: pendingComments }, { count: newPrayers }, { count: pendingMembers }, { count: toReview }, { count: newTestimonies }] = await Promise.all([
+  const [{ count: pendingComments }, { count: newPrayers }, { count: pendingMembers }, { count: toReview }, { count: newTestimonies }, { count: unreadChats }] = await Promise.all([
     supabase.from("post_comments").select("id", { count: "exact", head: true }).eq("approved", false),
     supabase.from("prayer_requests").select("id", { count: "exact", head: true }).eq("status", "new"),
     supabase.from("profiles").select("id", { count: "exact", head: true }).eq("status", "pending"),
     supabase.from("submissions").select("id", { count: "exact", head: true }).eq("status", "submitted"),
     supabase.from("testimonies").select("id", { count: "exact", head: true }).eq("status", "pending"),
+    supabase.from("conversations").select("member_id", { count: "exact", head: true }).gt("pastor_unread", 0),
   ]);
 
   return (
@@ -72,6 +73,7 @@ export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
             members: pendingMembers ?? 0,
             submissions: toReview ?? 0,
             testimonies: newTestimonies ?? 0,
+            messages: unreadChats ?? 0,
           }}
         />
 

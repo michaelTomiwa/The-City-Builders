@@ -57,6 +57,7 @@ export default async function MemberLayout({ children }: LayoutProps<"/me">) {
     .select("id", { count: "exact", head: true })
     .eq("user_id", user.id)
     .lte("due_on", lagosToday());
+  const { data: convo } = await supabase.from("conversations").select("member_unread").eq("member_id", user.id).maybeSingle();
   const handedIn = new Map(submissions.map((s) => [s.assignment_id, s.status]));
   const toDo = assignments.filter((a) => !handedIn.has(a.id) || handedIn.get(a.id) === "needs_work").length;
 
@@ -84,7 +85,7 @@ export default async function MemberLayout({ children }: LayoutProps<"/me">) {
             </div>
           </div>
           <div className="mt-6">
-            <MemberNav badges={{ assignments: toDo, memory: memoryDue ?? 0, teams: teamTasks.length }} />
+            <MemberNav badges={{ assignments: toDo, memory: memoryDue ?? 0, teams: teamTasks.length, messages: convo?.member_unread ?? 0 }} />
           </div>
         </div>
       </div>

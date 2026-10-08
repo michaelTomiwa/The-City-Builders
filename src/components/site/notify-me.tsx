@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase-browser";
 import { cn } from "@/lib/utils";
 import { VAPID_PUBLIC_KEY } from "@/lib/vapid";
 
@@ -30,7 +30,21 @@ async function registration() {
   return navigator.serviceWorker.ready;
 }
 
-export function NotifyMe({ tone = "night", className }: { tone?: "night" | "paper"; className?: string }) {
+// The browser client carries the signed-in session, so a member's phone is
+// linked to them and gets their own reminders and message alerts.
+let browserClient: ReturnType<typeof createClient> | null = null;
+const db = () => (browserClient ??= createClient());
+
+function saveSubscription(sub: PushSubscription) {
+  const json = sub.toJSON();
+  return db().rpc("save_push_subscription", {
+    p_endpoint: sub.endpoint,
+    p_p256dh: json.keys?.p256dh ?? "",
+    p_auth: json.keys?.auth ?? "",
+  });
+}
+
+export function NotifyMe({ tone = "night", className, label = "Notify me when we go live" }: { tone?: "night" | "paper"; className?: string; label?: string }) {
   const [state, setState] = useState<State>("loading");
   const [message, setMessage] = useState<string | null>(null);
 
@@ -53,6 +67,8 @@ export function NotifyMe({ tone = "night", className }: { tone?: "night" | "pape
         const reg = await navigator.serviceWorker.getRegistration();
         const sub = await reg?.pushManager.getSubscription();
         settle(sub ? "on" : "off");
+        // Link a phone that turned alerts on before signing in.
+        if (sub && (await db().auth.getSession()).data.session) saveSubscription(sub).then(() => undefined);
       } catch {
         settle("off");
       }
@@ -77,12 +93,7 @@ export function NotifyMe({ tone = "night", className }: { tone?: "night" | "pape
       const sub =
         (await reg.pushManager.getSubscription()) ??
         (await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: keyBytes(PUBLIC_KEY) }));
-      const json = sub.toJSON();
-      const { error } = await supabase.rpc("save_push_subscription", {
-        p_endpoint: sub.endpoint,
-        p_p256dh: json.keys?.p256dh ?? "",
-        p_auth: json.keys?.auth ?? "",
-      });
+      const { error } = await saveSubscription(sub);
       if (error) throw error;
       setState("on");
       setMessage("You're on the list. We'll alert you 5 minutes before we go live.");
@@ -99,7 +110,7 @@ export function NotifyMe({ tone = "night", className }: { tone?: "night" | "pape
       const reg = await navigator.serviceWorker.getRegistration();
       const sub = await reg?.pushManager.getSubscription();
       if (sub) {
-        await supabase.rpc("remove_push_subscription", { p_endpoint: sub.endpoint });
+        await db().rpc("remove_push_subscription", { p_endpoint: sub.endpoint });
         await sub.unsubscribe();
       }
       setState("off");
@@ -152,7 +163,7 @@ export function NotifyMe({ tone = "night", className }: { tone?: "night" | "pape
         )}
       >
         <BellIcon className={cn("h-[18px] w-[18px]", !on && "group-hover:animate-[ring_0.6s_ease-in-out]")} filled={on} />
-        {state === "busy" ? "One moment…" : on ? "Alerts on. Tap to turn off" : "Notify me when we go live"}
+        {state === "busy" ? "One moment…" : on ? "Alerts on. Tap to turn off" : label}
       </button>
       {message && (
         <p className={cn("text-sm", dim)} role="status">
