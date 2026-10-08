@@ -9,6 +9,7 @@ const groups = [
     label: "Overview",
     items: [
       { href: "/admin", label: "Dashboard", exact: true },
+      { href: "/admin/messages", label: "Messages", badge: "messages" as const },
       { href: "/admin/report", label: "Weekly report" },
     ],
   },
@@ -52,7 +53,7 @@ const groups = [
 export function AdminNav({
   counts,
 }: {
-  counts: { comments: number; prayers: number; members: number; submissions: number; testimonies: number };
+  counts: { comments: number; prayers: number; members: number; submissions: number; testimonies: number; messages: number };
 }) {
   const pathname = usePathname();
 

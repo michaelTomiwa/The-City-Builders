@@ -67,6 +67,9 @@ export default async function AdminMember({ params }: PageProps<"/admin/members/
           </p>
         </div>
         <div className="flex gap-2">
+          <Link href={`/admin/messages?m=${m.id}`} className={smallButton}>
+            Message
+          </Link>
           {m.phone && (
             <a href={`https://wa.me/${m.phone.replace(/[^0-9]/g, "")}`} target="_blank" rel="noopener noreferrer" className={smallButton}>
               WhatsApp

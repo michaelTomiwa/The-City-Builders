@@ -10,19 +10,20 @@ const items = [
   { href: "/me/school", label: "School" },
   { href: "/me/bible", label: "Bible" },
   { href: "/me/teams", label: "Teams" },
+  { href: "/me/messages", label: "Messages" },
   { href: "/me/assignments", label: "Assignments" },
   { href: "/me/journal", label: "Journal" },
   { href: "/me/profile", label: "Profile" },
 ];
 
-export function MemberNav({ badges }: { badges: { assignments: number; memory: number; teams: number } }) {
+export function MemberNav({ badges }: { badges: { assignments: number; memory: number; teams: number; messages: number } }) {
   const pathname = usePathname();
   return (
     <nav className="-mx-6 flex gap-1 overflow-x-auto px-6 sm:mx-0 sm:px-0" aria-label="Member area">
       {items.map((item) => {
         const active = item.exact ? pathname === item.href : pathname.startsWith(item.href);
         const badge =
-          item.href === "/me/assignments" ? badges.assignments : item.href === "/me/bible" ? badges.memory : item.href === "/me/teams" ? badges.teams : 0;
+          item.href === "/me/assignments" ? badges.assignments : item.href === "/me/bible" ? badges.memory : item.href === "/me/teams" ? badges.teams : item.href === "/me/messages" ? badges.messages : 0;
         return (
           <Link
             key={item.href}
