@@ -4,6 +4,9 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase-server";
 import { recentDuplicate } from "@/lib/duplicates";
+import { after } from "next/server";
+import { lateReasons } from "@/lib/accountability";
+import { sendMessagePush } from "@/lib/push";
 
 async function member() {
   const supabase = await createClient();
@@ -55,6 +58,18 @@ export async function submitAssignment(formData: FormData) {
   }
   if (filePath && !filePath.startsWith(`${user.id}/`)) throw new Error("That file isn't yours.");
 
+  // A first hand-in after the due date needs a reason (the database decides what's late).
+  const [{ data: assignment }, { data: existing }] = await Promise.all([
+    supabase.from("assignments").select("title, due_at").eq("id", assignmentId).maybeSingle(),
+    supabase.from("submissions").select("id").eq("assignment_id", assignmentId).eq("user_id", user.id).maybeSingle(),
+  ]);
+  const late = !existing && assignment?.due_at && Date.parse(assignment.due_at) < Date.now();
+  const reason = String(formData.get("late_reason") ?? "");
+  const lateNote = String(formData.get("late_note") ?? "").trim().slice(0, 2000) || null;
+  if (late && !lateReasons.some((r) => r.id === reason)) {
+    redirect(`/me/assignments/${assignmentId}?error=${encodeURIComponent("Please tell the pastor what happened before you hand in.")}`);
+  }
+
   check(
     (
       await supabase.from("submissions").upsert(
@@ -66,13 +81,30 @@ export async function submitAssignment(formData: FormData) {
           file_path: filePath,
           file_name: fileName,
           submitted_at: new Date().toISOString(),
+          ...(late ? { late_reason: reason, late_note: lateNote } : {}),
         },
         { onConflict: "assignment_id,user_id" }
       )
     ).error
   );
+
+  // "I'm going through something" goes straight to the pastor, in their private conversation.
+  if (late && reason === "struggling") {
+    const words = lateNote ? `\n\n"${lateNote}"` : "";
+    const { data: message } = await supabase
+      .from("direct_messages")
+      .insert({ member_id: user.id, body: `I handed in "${assignment?.title ?? "my assignment"}" late. I'm going through something right now.${words}` })
+      .select("*")
+      .single();
+    if (message) {
+      after(() =>
+        sendMessagePush("staff", () => ({ title: `${message.author_name ?? "A member"} is going through something`, body: lateNote ?? "Handed in late and asked for care.", url: `/admin/messages?m=${user.id}` }), `care-${user.id}`)
+      );
+    }
+  }
+
   revalidatePath("/me", "layout");
-  redirect(`/me/assignments/${assignmentId}?submitted=1`);
+  redirect(`/me/assignments/${assignmentId}?submitted=${late ? "late" : "1"}`);
 }
 
 export async function saveJournal(formData: FormData) {

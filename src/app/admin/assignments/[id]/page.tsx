@@ -6,6 +6,7 @@ import { ConfirmButton } from "@/components/admin/confirm-button";
 import { AssignmentForm } from "@/components/admin/assignment-form";
 import { activeMembers } from "@/lib/admin-discipleship";
 import { displayName, lagosDateTime, type Assignment, type Submission } from "@/lib/discipleship";
+import { dueState, lateReasonLabel } from "@/lib/accountability";
 import { deleteAssignment, reviewSubmission, saveAssignment } from "../../discipleship/actions";
 
 const statusPill = {
@@ -103,9 +104,17 @@ export default async function AdminAssignment({ params, searchParams }: PageProp
                     <p className="font-medium text-paper">{nameOf.get(s.user_id) ?? "Member"}</p>
                     <span className="flex items-center gap-2 text-xs text-paper-dim">
                       {lagosDateTime(s.updated_at ?? s.submitted_at)}
+                      {s.late && <Pill tone="red">Late</Pill>}
                       {statusPill[s.status]}
                     </span>
                   </header>
+                  {s.late && (
+                    <p className="mt-3 rounded-sm bg-[#fbefec] px-3 py-2 text-sm text-paper">
+                      <span className="font-medium text-[#8a2f1e]">Why it was late: </span>
+                      {lateReasonLabel(s.late_reason)}
+                      {s.late_note && <span className="text-paper-dim"> · &ldquo;{s.late_note}&rdquo;</span>}
+                    </p>
+                  )}
                   {s.body && <p className="mt-3 whitespace-pre-line leading-relaxed text-paper">{s.body}</p>}
                   <div className="mt-3 flex flex-wrap gap-3 text-sm">
                     {files.get(s.id) && (
@@ -143,7 +152,7 @@ export default async function AdminAssignment({ params, searchParams }: PageProp
             )}
           </div>
           <aside className="rounded-md border border-steel bg-white/80 p-5 lg:self-start">
-            <h2 className="font-medium text-paper">Not handed in yet</h2>
+            <h2 className="font-medium text-paper">{dueState(a) === "missed" ? "Missed" : "Not handed in yet"}</h2>
             {missing.length === 0 ? (
               <p className="mt-2 text-sm text-paper-dim">Everyone has handed in.</p>
             ) : (

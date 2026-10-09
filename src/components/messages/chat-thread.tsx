@@ -20,6 +20,8 @@ type Props = {
   quickReplies?: string[];
   emptyText: string;
   placeholder: string;
+  /** Words to start from, e.g. a suggested message from the Faithfulness page. */
+  initialText?: string;
 };
 
 const TYPING_EVENT = "typing";
@@ -35,10 +37,10 @@ function dayLabel(iso: string, now = Date.now()) {
   return new Date(iso).toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric", timeZone: "Africa/Lagos" });
 }
 
-export function ChatThread({ memberId, viewer, initialMessages, otherReadAt, firstName, quickReplies = [], emptyText, placeholder }: Props) {
+export function ChatThread({ memberId, viewer, initialMessages, otherReadAt, firstName, quickReplies = [], emptyText, placeholder, initialText = "" }: Props) {
   const [messages, setMessages] = useState(initialMessages);
   const [readAt, setReadAt] = useState(otherReadAt);
-  const [text, setText] = useState("");
+  const [text, setText] = useState(initialText);
   const [photo, setPhoto] = useState<{ path: string; preview: string } | null>(null);
   const [busy, setBusy] = useState<"sending" | "uploading" | null>(null);
   const [error, setError] = useState<string | null>(null);

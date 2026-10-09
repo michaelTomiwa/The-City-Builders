@@ -26,7 +26,7 @@ async function memberContext(supabase: Awaited<ReturnType<typeof createClient>>,
     supabase.from(table).select(column).eq("user_id", id).order(column, { ascending: false }).limit(1).maybeSingle();
   const [steps, reviewed, lessons, attendance, bible, invites, lastStep, lastAttend, lastBible, lastLesson, teams, notes] = await Promise.all([
     count("step_checkins"),
-    supabase.from("submissions").select("*", { count: "exact", head: true }).eq("user_id", id).eq("status", "reviewed"),
+    supabase.from("submissions").select("late").eq("user_id", id),
     count("lesson_progress"),
     count("attendance"),
     count("bible_reading"),
@@ -41,7 +41,8 @@ async function memberContext(supabase: Awaited<ReturnType<typeof createClient>>,
   const g = growth(
     growthPoints({
       steps: steps.count ?? 0,
-      reviewed: reviewed.count ?? 0,
+      onTime: (reviewed.data ?? []).filter((x) => !x.late).length,
+      lateWork: (reviewed.data ?? []).filter((x) => x.late).length,
       lessons: lessons.count ?? 0,
       attendance: attendance.count ?? 0,
       bibleDays: bible.count ?? 0,
@@ -305,6 +306,7 @@ export default async function AdminMessages({ searchParams }: PageProps<"/admin/
                 quickReplies={quickReplies}
                 emptyText={`Start a conversation with ${firstName(member)}. They'll get an alert on their phone if they've turned alerts on.`}
                 placeholder={`Message ${firstName(member)}…`}
+                initialText={typeof query.draft === "string" ? query.draft.slice(0, 2000) : ""}
               />
             </div>
           </section>

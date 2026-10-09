@@ -4,6 +4,8 @@ import ReactMarkdown from "react-markdown";
 import { getMember, getMemberData } from "@/lib/member-data";
 import { dueLabel, lagosDateTime } from "@/lib/discipleship";
 import { SubmissionForm } from "@/components/members/submission-form";
+import { Countdown } from "@/components/members/countdown";
+import { dueState } from "@/lib/accountability";
 import { cn } from "@/lib/utils";
 
 const prose =
@@ -19,6 +21,7 @@ export default async function AssignmentPage({ params, searchParams }: PageProps
   const sub = submissions.find((s) => s.assignment_id === a.id) ?? null;
   const due = dueLabel(a.due_at);
   const program = programs.find((p) => p.id === a.program_id);
+  const state = dueState(a);
 
   return (
     <div>
@@ -39,6 +42,7 @@ export default async function AssignmentPage({ params, searchParams }: PageProps
             )}
           </p>
           <h1 className="mt-2 font-display text-4xl leading-tight text-paper sm:text-5xl">{a.title}</h1>
+          {!sub && a.due_at && state === "open" && <Countdown due={a.due_at} className="mt-3" />}
           {a.instructions && (
             <div className={cn("mt-8", prose)}>
               <ReactMarkdown>{a.instructions}</ReactMarkdown>
@@ -71,7 +75,9 @@ export default async function AssignmentPage({ params, searchParams }: PageProps
           )}
           {query.submitted && (
             <p className="rounded-md border border-[#bfe0c8] bg-[#eef8f0] px-4 py-3 text-sm text-[#24613a]" role="status">
-              Handed in. The pastor will see it and you&rsquo;ll get feedback here.
+              {query.submitted === "late"
+                ? "Handed in. Thank you for finishing it and for telling the pastor what happened. Late is better than never. 🙏"
+                : "Handed in. The pastor will see it and you\u2019ll get feedback here."}
             </p>
           )}
           {typeof query.error === "string" && (
@@ -79,7 +85,7 @@ export default async function AssignmentPage({ params, searchParams }: PageProps
               {query.error}
             </p>
           )}
-          <SubmissionForm assignmentId={a.id} userId={user.id} submission={sub} />
+          <SubmissionForm assignmentId={a.id} userId={user.id} submission={sub} dueState={state} />
         </aside>
       </div>
     </div>
