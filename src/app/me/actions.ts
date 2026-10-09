@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase-server";
+import { recentDuplicate } from "@/lib/duplicates";
 
 async function member() {
   const supabase = await createClient();
@@ -78,6 +79,7 @@ export async function saveJournal(formData: FormData) {
   const { supabase, user } = await member();
   const body = String(formData.get("body") ?? "").trim();
   if (!body) redirect("/me/journal");
+  if (await recentDuplicate(supabase, "journal_entries", { user_id: user.id, body })) redirect("/me/journal?saved=1");
   check(
     (
       await supabase.from("journal_entries").insert({
@@ -246,6 +248,7 @@ export async function shareTestimony(formData: FormData) {
   if (!title || !body) redirect("/me/journal?testimony=missing");
   const { data: profile } = await supabase.from("profiles").select("full_name").eq("id", user.id).maybeSingle();
   const anonymous = formData.get("anonymous") === "on";
+  if (await recentDuplicate(supabase, "testimonies", { user_id: user.id, title, body })) redirect("/me/journal?testimony=sent");
   check(
     (
       await supabase.from("testimonies").insert({

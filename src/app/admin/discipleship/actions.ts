@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase-server";
+import { recentDuplicate } from "@/lib/duplicates";
 import { kindOrder, type DraftStep, type StepKind } from "@/lib/discipleship";
 
 /** Pastor tools run as a signed-in admin or author; the database enforces the same rules. */
@@ -86,9 +87,10 @@ export async function saveProgram(fd: FormData) {
   };
   if (!payload.title) throw new Error("Give the programme a title.");
 
-  let programId = id;
-  if (id) {
-    check((await supabase.from("programs").update(payload).eq("id", id)).error);
+  // A second tap on Save within a minute updates the first copy instead of making another.
+  let programId = id ?? (await recentDuplicate(supabase, "programs", { title: payload.title }));
+  if (programId) {
+    check((await supabase.from("programs").update(payload).eq("id", programId)).error);
   } else {
     const { data, error } = await supabase.from("programs").insert(payload).select("id").single();
     check(error);
@@ -166,9 +168,10 @@ export async function saveAssignment(fd: FormData) {
   };
   if (!payload.title) throw new Error("Give the assignment a title.");
 
-  let assignmentId = id;
-  if (id) {
-    check((await supabase.from("assignments").update(payload).eq("id", id)).error);
+  // A second tap on Save within a minute updates the first copy instead of making another.
+  let assignmentId = id ?? (await recentDuplicate(supabase, "assignments", { title: payload.title }));
+  if (assignmentId) {
+    check((await supabase.from("assignments").update(payload).eq("id", assignmentId)).error);
   } else {
     const { data, error } = await supabase.from("assignments").insert(payload).select("id").single();
     check(error);
@@ -218,7 +221,9 @@ export async function saveNotice(fd: FormData) {
   const title = text(fd, "title");
   const body = text(fd, "body");
   if (!title || !body) throw new Error("A notice needs a title and a message.");
-  check((await supabase.from("member_notices").insert({ title, body, pinned: fd.get("pinned") === "on" })).error);
+  if (!(await recentDuplicate(supabase, "member_notices", { title, body }))) {
+    check((await supabase.from("member_notices").insert({ title, body, pinned: fd.get("pinned") === "on" })).error);
+  }
   revalidatePath("/admin/notices");
   revalidatePath("/me", "layout");
   redirect("/admin/notices?saved=1");
@@ -249,11 +254,13 @@ export async function saveCourse(fd: FormData) {
   const id = optional(fd, "id");
   const title = text(fd, "title");
   if (!title) throw new Error("Give the course a title.");
+  // A second tap on Save within a minute updates the first copy instead of making another.
+  const existingId = id ?? (await recentDuplicate(supabase, "courses", { title }));
 
   // a web address no other course is using
   const base = slugOf(text(fd, "slug") || title);
   const { data: taken } = await supabase.from("courses").select("id, slug").like("slug", `${base}%`);
-  const used = new Set((taken ?? []).filter((r) => r.id !== id).map((r) => r.slug as string));
+  const used = new Set((taken ?? []).filter((r) => r.id !== existingId).map((r) => r.slug as string));
   let slug = base;
   for (let n = 2; used.has(slug); n++) slug = `${base}-${n}`;
 
@@ -267,8 +274,8 @@ export async function saveCourse(fd: FormData) {
     updated_at: new Date().toISOString(),
   };
 
-  let courseId = id;
-  if (id) check((await supabase.from("courses").update(payload).eq("id", id)).error);
+  let courseId = existingId;
+  if (courseId) check((await supabase.from("courses").update(payload).eq("id", courseId)).error);
   else {
     const { data, error } = await supabase.from("courses").insert(payload).select("id").single();
     check(error);
@@ -431,14 +438,15 @@ export async function saveTeam(fd: FormData) {
   const id = optional(fd, "id");
   const name = text(fd, "name");
   if (!name) throw new Error("Give the team a name.");
+  const existingId = id ?? (await recentDuplicate(supabase, "teams", { name }));
   const base = name.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "") || "team";
   const { data: taken } = await supabase.from("teams").select("id, slug").like("slug", `${base}%`);
-  const used = new Set((taken ?? []).filter((r) => r.id !== id).map((r) => r.slug as string));
+  const used = new Set((taken ?? []).filter((r) => r.id !== existingId).map((r) => r.slug as string));
   let slug = base;
   for (let n = 2; used.has(slug); n++) slug = `${base}-${n}`;
   const payload = { name, slug, description: optional(fd, "description"), color: text(fd, "color") || "#f0b44c" };
-  let teamId = id;
-  if (id) check((await supabase.from("teams").update(payload).eq("id", id)).error);
+  let teamId = existingId;
+  if (teamId) check((await supabase.from("teams").update(payload).eq("id", teamId)).error);
   else {
     const { data, error } = await supabase.from("teams").insert(payload).select("id").single();
     check(error);

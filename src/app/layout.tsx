@@ -11,6 +11,7 @@ import { PublicOnly } from "@/components/site/public-only";
 import { AnnouncementBar } from "@/components/site/announcement-bar";
 import { skyScript } from "@/lib/sky";
 import { SkyClock } from "@/components/site/sky-clock";
+import { FormGuard } from "@/components/site/form-guard";
 
 const gloock = Gloock({
   variable: "--font-gloock",
@@ -89,6 +90,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
       <body className="min-h-full flex flex-col bg-midnight text-paper">
         <MotionProvider>
           <SkyClock />
+          <FormGuard />
           <PublicOnly>
             <AnnouncementBar settings={settings} />
             <SiteHeader extraLinks={navPages} logoUrl={settings?.logo_url} />

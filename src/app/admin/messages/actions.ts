@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase-server";
 import { sendMessagePush } from "@/lib/push";
 import { messageAudiences } from "@/lib/message-audiences";
+import { recentDuplicate } from "@/lib/duplicates";
 import { PASTOR_NAME, personalize } from "@/lib/messages";
 
 async function staff() {
@@ -61,6 +62,10 @@ export async function sendBroadcast(formData: FormData) {
   if (!body) throw new Error("Write a message first.");
   const audience = (await messageAudiences(supabase)).find((a) => a.id === audienceId);
   if (!audience || audience.members.length === 0) throw new Error("Nobody is in that group yet.");
+  // Never send the same message to the same group twice in a row by accident.
+  if (await recentDuplicate(supabase, "message_broadcasts", { audience: audience.label, body }, 120)) {
+    redirect(`/admin/messages/broadcast?sent=${audience.members.length}`);
+  }
 
   const { data: broadcast, error } = await supabase
     .from("message_broadcasts")
