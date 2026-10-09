@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase-server";
+import { recentDuplicate } from "@/lib/duplicates";
 
 async function me() {
   const supabase = await createClient();
@@ -41,7 +42,9 @@ export async function postToTeam(fd: FormData) {
   const body = text(fd, "body");
   const kind = text(fd, "kind") === "prayer" ? "prayer" : "update";
   const slug = await slugOf(supabase, teamId);
-  if (body) check((await supabase.from("team_posts").insert({ team_id: teamId, author_id: user.id, author_name: name, kind, body })).error);
+  if (body && !(await recentDuplicate(supabase, "team_posts", { team_id: teamId, author_id: user.id, body }))) {
+    check((await supabase.from("team_posts").insert({ team_id: teamId, author_id: user.id, author_name: name, kind, body })).error);
+  }
   refresh(slug);
   redirect(`/me/teams/${slug}?tab=${kind === "prayer" ? "prayer" : "board"}`);
 }
@@ -67,6 +70,10 @@ export async function createTeamTask(fd: FormData) {
   const title = text(fd, "title");
   if (!title) throw new Error("Give the task a title.");
   const due = text(fd, "due_at");
+  if (await recentDuplicate(supabase, "team_tasks", { team_id: teamId, title })) {
+    const slug = await slugOf(supabase, teamId);
+    redirect(`/me/teams/${slug}?tab=tasks`);
+  }
   const { data: task, error } = await supabase
     .from("team_tasks")
     .insert({ team_id: teamId, title, details: text(fd, "details") || null, due_at: due ? new Date(`${due}:00+01:00`).toISOString() : null, created_by: user.id })
@@ -157,7 +164,9 @@ export async function sendTeamMessage(fd: FormData) {
   const { supabase, user, name, isStaff } = await me();
   const teamId = text(fd, "team_id");
   const body = text(fd, "body");
-  if (body) check((await supabase.from("team_messages").insert({ team_id: teamId, author_id: user.id, author_name: name, body })).error);
+  if (body && !(await recentDuplicate(supabase, "team_messages", { team_id: teamId, author_id: user.id, body }))) {
+    check((await supabase.from("team_messages").insert({ team_id: teamId, author_id: user.id, author_name: name, body })).error);
+  }
   const slug = await slugOf(supabase, teamId);
   refresh(slug);
   if (text(fd, "from") === "admin" && isStaff) redirect(`/admin/teams/${teamId}?tab=messages`);
@@ -167,9 +176,14 @@ export async function sendTeamMessage(fd: FormData) {
 export async function recordMeeting(fd: FormData) {
   const { supabase, user } = await me();
   const teamId = text(fd, "team_id");
+  const title = text(fd, "title") || "Team meeting";
+  if (await recentDuplicate(supabase, "team_meetings", { team_id: teamId, title })) {
+    const slug = await slugOf(supabase, teamId);
+    redirect(`/me/teams/${slug}?tab=meetings`);
+  }
   const { data, error } = await supabase
     .from("team_meetings")
-    .insert({ team_id: teamId, title: text(fd, "title") || "Team meeting", held_on: text(fd, "held_on") || undefined, notes: text(fd, "notes") || null, created_by: user.id })
+    .insert({ team_id: teamId, title, held_on: text(fd, "held_on") || undefined, notes: text(fd, "notes") || null, created_by: user.id })
     .select("id")
     .single();
   check(error);

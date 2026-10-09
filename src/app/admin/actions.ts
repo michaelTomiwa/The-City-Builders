@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase-server";
 import { sendAlert } from "@/lib/push";
+import { recentDuplicate } from "@/lib/duplicates";
 
 function slugify(title: string) {
   return title
@@ -107,7 +108,7 @@ export async function savePost(formData: FormData) {
 
   if (id) {
     check((await supabase.from("posts").update(payload).eq("id", id)).error);
-  } else {
+  } else if (!(await recentDuplicate(supabase, "posts", { title: payload.title }))) {
     check((await supabase.from("posts").insert({ ...payload, author_id: user.id })).error);
   }
 
@@ -244,7 +245,7 @@ export async function saveSermon(formData: FormData) {
   };
 
   if (id) check((await supabase.from("sermons").update(payload).eq("id", id)).error);
-  else check((await supabase.from("sermons").insert(payload)).error);
+  else if (!(await recentDuplicate(supabase, "sermons", { title: payload.title }))) check((await supabase.from("sermons").insert(payload)).error);
 
   revalidatePath("/admin", "layout");
   revalidatePath("/sermons", "layout");
@@ -280,7 +281,7 @@ export async function saveEvent(formData: FormData) {
   };
 
   if (id) check((await supabase.from("events").update(payload).eq("id", id)).error);
-  else check((await supabase.from("events").insert(payload)).error);
+  else if (!(await recentDuplicate(supabase, "events", { title: payload.title }))) check((await supabase.from("events").insert(payload)).error);
 
   revalidatePath("/admin", "layout");
   revalidatePath("/events");
@@ -363,7 +364,7 @@ export async function savePage(formData: FormData) {
   };
 
   if (id) check((await supabase.from("pages").update(payload).eq("id", id)).error);
-  else check((await supabase.from("pages").insert(payload)).error);
+  else if (!(await recentDuplicate(supabase, "pages", { title: payload.title }))) check((await supabase.from("pages").insert(payload)).error);
 
   revalidatePath("/admin/pages");
   revalidatePath("/p/[slug]", "page");
