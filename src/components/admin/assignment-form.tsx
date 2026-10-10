@@ -98,6 +98,17 @@ export function AssignmentForm({
             <input type="datetime-local" name="due_at" defaultValue={toLagosInput(assignment?.due_at ?? null)} className="mt-1 h-10 w-full rounded-sm border border-steel bg-white px-2 text-sm" />
           </label>
           <label className="block text-sm text-paper">
+            Grace period after the due date
+            <select name="grace_hours" defaultValue={String(assignment?.grace_hours ?? 48)} className="mt-1 h-10 w-full rounded-sm border border-steel bg-white px-2 text-sm">
+              <option value="0">None: missed at the due time</option>
+              <option value="24">1 day</option>
+              <option value="48">2 days</option>
+              <option value="72">3 days</option>
+              <option value="168">1 week</option>
+            </select>
+            <span className="mt-1 block text-xs text-paper-dim">Late hand-ins in this time count as late, not missed. After it, people who haven&rsquo;t handed in get a gentle message from you.</span>
+          </label>
+          <label className="block text-sm text-paper">
             Part of a programme (optional)
             <select name="program_id" defaultValue={assignment?.program_id ?? ""} className="mt-1 h-10 w-full rounded-sm border border-steel bg-white px-2 text-sm">
               <option value="">None</option>

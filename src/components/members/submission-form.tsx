@@ -4,9 +4,23 @@ import { useRef, useState } from "react";
 import { createClient } from "@/lib/supabase-browser";
 import { submitAssignment } from "@/app/me/actions";
 import { lagosDateTime, type Submission } from "@/lib/discipleship";
+import { lateReasons } from "@/lib/accountability";
+import { cn } from "@/lib/utils";
 
 /** Hand in an assignment: write an answer, attach a file (photo, PDF, document) and/or add a link. */
-export function SubmissionForm({ assignmentId, userId, submission }: { assignmentId: string; userId: string; submission: Submission | null }) {
+export function SubmissionForm({
+  assignmentId,
+  userId,
+  submission,
+  dueState = "open",
+}: {
+  assignmentId: string;
+  userId: string;
+  submission: Submission | null;
+  dueState?: "open" | "late" | "missed";
+}) {
+  const askWhy = !submission && dueState !== "open";
+  const [reason, setReason] = useState<string>("");
   const [editing, setEditing] = useState(!submission || submission.status === "needs_work");
   const [file, setFile] = useState<{ path: string; name: string } | null>(
     submission?.file_path ? { path: submission.file_path, name: submission.file_name ?? "Attached file" } : null
@@ -37,7 +51,10 @@ export function SubmissionForm({ assignmentId, userId, submission }: { assignmen
     return (
       <section className="rounded-md border border-steel bg-white p-5">
         <p className="text-sm font-medium text-paper">Your submission</p>
-        <p className="text-xs text-paper-dim">Handed in {lagosDateTime(submission.updated_at ?? submission.submitted_at)}</p>
+        <p className="text-xs text-paper-dim">
+          Handed in {lagosDateTime(submission.updated_at ?? submission.submitted_at)}
+          {submission.late && <span className="ml-1.5 rounded-full bg-[#f6e1dc] px-2 py-0.5 text-[#8a2f1e]">Late</span>}
+        </p>
         {submission.body && <p className="mt-3 whitespace-pre-line text-sm leading-relaxed text-paper">{submission.body}</p>}
         {submission.file_name && <p className="mt-3 text-sm text-paper-dim">Attached: {submission.file_name}</p>}
         {submission.link_url && (
@@ -62,7 +79,40 @@ export function SubmissionForm({ assignmentId, userId, submission }: { assignmen
       }}
       className="rounded-md border border-steel bg-white p-5"
     >
-      <p className="font-display text-xl text-paper">{submission ? "Update your work" : "Hand it in"}</p>
+      <p className="font-display text-xl text-paper">{submission ? "Update your work" : askWhy ? "Hand it in late" : "Hand it in"}</p>
+      {askWhy && (
+        <fieldset className="mt-4 rounded-md border border-[#ecc4ba] bg-[#fbefec] p-4">
+          <legend className="sr-only">What happened?</legend>
+          <p className="text-sm font-medium text-[#8a2f1e]">{dueState === "missed" ? "This was missed, but it's not too late." : "This is past the due date."}</p>
+          <p className="mt-1 text-sm text-paper">What happened? Only the pastor sees this.</p>
+          <div className="mt-3 flex flex-wrap gap-1.5">
+            {lateReasons.map((r) => (
+              <label
+                key={r.id}
+                className={cn(
+                  "cursor-pointer rounded-full border px-3 py-1.5 text-sm transition-colors",
+                  reason === r.id ? "border-gold bg-gold/20 text-paper" : "border-steel bg-white text-paper-dim hover:text-paper"
+                )}
+              >
+                <input type="radio" name="late_reason" value={r.id} required checked={reason === r.id} onChange={() => setReason(r.id)} className="sr-only" />
+                {r.label}
+              </label>
+            ))}
+          </div>
+          {reason === "struggling" && (
+            <p className="mt-3 text-sm text-paper">
+              Thank you for being honest. The pastor will hear about this straight away and reach out to you. 💛
+            </p>
+          )}
+          <textarea
+            name="late_note"
+            rows={2}
+            maxLength={2000}
+            placeholder="A few words (optional)"
+            className="mt-3 w-full resize-y rounded-sm border border-steel bg-white px-3 py-2 text-sm text-paper outline-none focus:border-gold"
+          />
+        </fieldset>
+      )}
       <input type="hidden" name="assignment_id" value={assignmentId} />
       <input type="hidden" name="file_path" value={file?.path ?? ""} />
       <input type="hidden" name="file_name" value={file?.name ?? ""} />
@@ -124,7 +174,7 @@ export function SubmissionForm({ assignmentId, userId, submission }: { assignmen
         </p>
       )}
       <button type="submit" disabled={uploading || sending} className="mt-5 h-11 w-full bg-gold font-medium text-ink hover:bg-gold-soft disabled:opacity-60">
-        {sending ? "Handing in…" : submission ? "Hand in again" : "Hand in"}
+        {sending ? "Handing in…" : submission ? "Hand in again" : askWhy ? "Hand in late" : "Hand in"}
       </button>
     </form>
   );

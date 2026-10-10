@@ -127,3 +127,41 @@ export async function sendMessagePush(users: string[] | "staff", payload: (userI
     return { sent: 0 };
   }
 }
+
+type ReminderRow = UserTarget & { kind: "24h" | "3h"; assignment_id: string; title: string; due_at: string };
+
+/**
+ * Every hour: alerts 24 hours and 3 hours before an assignment is due (to
+ * people who haven't handed in yet), then the accountability follow-ups:
+ * gentle messages for new misses, check-ins and flags for the pastor.
+ */
+export async function runAssignmentCare() {
+  if (!pushConfigured()) return { reminders: 0, followUps: 0 };
+  let reminders = 0;
+  const { data: rows, error } = await supabase.rpc("assignment_reminder_targets", { p_secret: secret() });
+  if (error) throw new Error(error.message);
+  const groups = new Map<string, ReminderRow[]>();
+  for (const r of (rows ?? []) as ReminderRow[]) {
+    const key = `due${r.kind}-${r.assignment_id}`;
+    groups.set(key, [...(groups.get(key) ?? []), r]);
+  }
+  for (const [key, list] of groups) {
+    const first = list[0];
+    const title = first.kind === "3h" ? "Due in 3 hours" : "Due tomorrow";
+    const body = `"${first.title}" is due ${first.kind === "3h" ? "soon" : "in 24 hours"}. Hand it in on time 🙏`;
+    if (!(await claim({ key, title, body }))) continue;
+    const { sent } = await deliver(list, () => ({ title, body, url: `/me/assignments/${first.assignment_id}`, tag: key }));
+    await finish(key, sent);
+    reminders += sent;
+  }
+
+  const { data: actions, error: runError } = await supabase.rpc("run_accountability", { p_secret: secret() });
+  if (runError) throw new Error(runError.message);
+  const list = (actions ?? []) as { push_user: string | null; push_title: string; push_body: string; push_url: string }[];
+  let followUps = 0;
+  for (const a of list) {
+    const { sent } = await sendMessagePush(a.push_user ? [a.push_user] : "staff", () => ({ title: a.push_title, body: a.push_body, url: a.push_url }), `care-${a.push_user ?? "staff"}`);
+    followUps += sent;
+  }
+  return { reminders, followUps, actions: list.length };
+}

@@ -64,10 +64,12 @@ export const getMemberData = cache(async () => {
 /** Growth level and streak from every kind of activity (steps, lessons, services, Bible reading). */
 export function memberGrowth(d: Awaited<ReturnType<typeof getMemberData>>) {
   const reviewed = d.submissions.filter((s) => s.status === "reviewed").length;
+  const lateWork = d.submissions.filter((s) => s.late).length;
   const g = growth(
     growthPoints({
       steps: d.checkins.length,
-      reviewed,
+      onTime: d.submissions.length - lateWork,
+      lateWork,
       lessons: d.lessonsDone.length,
       attendance: d.attendance.length,
       bibleDays: d.bibleDays.length,

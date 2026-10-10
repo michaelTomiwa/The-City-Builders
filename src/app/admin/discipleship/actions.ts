@@ -164,6 +164,7 @@ export async function saveAssignment(fd: FormData) {
     due_at: lagosToIso(optional(fd, "due_at")),
     audience: text(fd, "audience") === "selected" ? "selected" : "everyone",
     status: ["draft", "published", "archived"].includes(text(fd, "status")) ? text(fd, "status") : "draft",
+    grace_hours: [0, 24, 48, 72, 168].includes(Number(text(fd, "grace_hours"))) ? Number(text(fd, "grace_hours")) : 48,
     updated_at: new Date().toISOString(),
   };
   if (!payload.title) throw new Error("Give the assignment a title.");

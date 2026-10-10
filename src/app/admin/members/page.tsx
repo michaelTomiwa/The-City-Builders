@@ -13,7 +13,7 @@ export default async function AdminMembers({ searchParams }: PageProps<"/admin/m
   const [{ data }, { data: checkins }, { data: subs }, { data: me }] = await Promise.all([
     supabase.from("profiles").select("*").order("created_at", { ascending: false }),
     supabase.from("step_checkins").select("user_id, created_at"),
-    supabase.from("submissions").select("user_id, status"),
+    supabase.from("submissions").select("user_id, status, late"),
     supabase.from("profiles").select("role").eq("id", user!.id).maybeSingle(),
   ]);
   const people = (data ?? []) as Member[];
@@ -24,13 +24,14 @@ export default async function AdminMembers({ searchParams }: PageProps<"/admin/m
 
   const statsFor = (id: string) => {
     const mine = (checkins ?? []).filter((c) => c.user_id === id);
-    const reviewed = (subs ?? []).filter((s) => s.user_id === id && s.status === "reviewed").length;
+    const handedIn = (subs ?? []).filter((s) => s.user_id === id);
+    const lateWork = handedIn.filter((s) => s.late).length;
     const last = mine.reduce<string | null>((acc, c) => (!acc || c.created_at > acc ? c.created_at : acc), null);
     return {
       steps: mine.length,
       submissions: (subs ?? []).filter((s) => s.user_id === id).length,
       streak: streak(mine.map((c) => c.created_at)),
-      level: growth(mine.length + reviewed * 5).level.name,
+      level: growth(mine.length + (handedIn.length - lateWork) * 5 + lateWork * 2).level.name,
       last,
     };
   };

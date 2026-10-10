@@ -51,6 +51,7 @@ export type Assignment = {
   audience: "everyone" | "selected";
   status: "draft" | "published" | "archived";
   created_at: string;
+  grace_hours?: number;
 };
 
 export type Submission = {
@@ -66,6 +67,9 @@ export type Submission = {
   reviewed_at: string | null;
   submitted_at: string;
   updated_at: string;
+  late?: boolean;
+  late_reason?: string | null;
+  late_note?: string | null;
 };
 
 export type Member = {
@@ -154,12 +158,12 @@ export const levels = [
 ];
 
 /** Growth points from everything a member does. */
-export function growthPoints(x: { steps: number; reviewed: number; lessons?: number; attendance?: number; bibleDays?: number; invites?: number }) {
-  return x.steps + x.reviewed * 5 + (x.lessons ?? 0) * 3 + (x.attendance ?? 0) * 2 + (x.bibleDays ?? 0) + (x.invites ?? 0) * 5;
+export function growthPoints(x: { steps: number; onTime: number; lateWork?: number; lessons?: number; attendance?: number; bibleDays?: number; invites?: number }) {
+  return x.steps + x.onTime * 5 + (x.lateWork ?? 0) * 2 + (x.lessons ?? 0) * 3 + (x.attendance ?? 0) * 2 + (x.bibleDays ?? 0) + (x.invites ?? 0) * 5;
 }
 
 export const pointsGuide =
-  "1 point for each step kept or Bible day read, 2 for each service attended, 3 for each lesson passed, and 5 for each assignment the pastor reviews or friend you invite who joins.";
+  "1 point for each step kept or Bible day read, 2 for each service attended or assignment handed in late, 3 for each lesson passed, and 5 for each assignment handed in on time or friend you invite who joins.";
 
 export function growth(points: number) {
   let index = 0;

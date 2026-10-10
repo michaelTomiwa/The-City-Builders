@@ -13,7 +13,7 @@ export default async function AdminMember({ params }: PageProps<"/admin/members/
   const [{ data: row }, checkins, subs, lessons, attendance, bible, notes, programs, assignments, courses, partners] = await Promise.all([
     supabase.from("profiles").select("*").eq("id", id).maybeSingle(),
     supabase.from("step_checkins").select("program_id, note, shared, created_at").eq("user_id", id).order("created_at", { ascending: false }),
-    supabase.from("submissions").select("assignment_id, status, submitted_at").eq("user_id", id),
+    supabase.from("submissions").select("assignment_id, status, submitted_at, late").eq("user_id", id),
     supabase.from("lesson_progress").select("course_id, completed_at").eq("user_id", id),
     supabase.from("attendance").select("service_id, service_date, created_at").eq("user_id", id).order("service_date", { ascending: false }),
     supabase.from("bible_reading").select("day, read_at").eq("user_id", id),
@@ -30,8 +30,8 @@ export default async function AdminMember({ params }: PageProps<"/admin/members/
   const l = lessons.data ?? [];
   const a = attendance.data ?? [];
   const b = bible.data ?? [];
-  const reviewed = s.filter((x) => x.status === "reviewed").length;
-  const g = growth(growthPoints({ steps: c.length, reviewed, lessons: l.length, attendance: a.length, bibleDays: b.length }));
+  const lateWork = s.filter((x) => x.late).length;
+  const g = growth(growthPoints({ steps: c.length, onTime: s.length - lateWork, lateWork, lessons: l.length, attendance: a.length, bibleDays: b.length }));
   const activity = [...c.map((x) => x.created_at), ...l.map((x) => x.completed_at), ...a.map((x) => x.created_at), ...b.map((x) => x.read_at)].sort().reverse();
   const last = activity[0] ?? null;
   const quietDays = last ? daysSince(last) : null;
