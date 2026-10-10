@@ -1,4 +1,5 @@
 import type { Post } from "@/lib/supabase";
+import { plainText } from "@/lib/post-text";
 
 export type PostWithStats = Post & { comment_count: number };
 
@@ -11,7 +12,7 @@ export function withStats(rows: (Post & { post_comments?: { count: number }[] })
 }
 
 export function readingMinutes(content: string) {
-  const words = content.trim().split(/\s+/).filter(Boolean).length;
+  const words = plainText(content).split(" ").filter(Boolean).length;
   return Math.max(1, Math.round(words / 220));
 }
 

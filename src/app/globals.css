@@ -323,3 +323,49 @@ form[data-sending] button:not([type="button"]):not([type="reset"]) {
   opacity: 0.6;
   cursor: progress;
 }
+
+/* Blog post body: the same look in the rich editor and on the published post. */
+.post-body {
+  font-size: 1.125rem;
+  line-height: 1.8;
+  color: var(--paper-dim);
+}
+.post-body > * + * { margin-top: 1.5rem; }
+.post-body > :first-child { margin-top: 0; }
+.post-body p:empty::after { content: "\00a0"; }
+.post-body h2, .post-body h3, .post-body h4 { font-family: var(--font-gloock), serif; color: var(--paper); line-height: 1.2; }
+.post-body h2 { margin-top: 3rem; font-size: 1.875rem; }
+.post-body h3 { margin-top: 2rem; font-size: 1.5rem; }
+.post-body h4 { margin-top: 1.75rem; font-size: 1.25rem; }
+.post-body strong, .post-body b { color: var(--paper); font-weight: 600; }
+.post-body a { color: var(--gold-text); text-decoration: underline; text-underline-offset: 4px; }
+.post-body blockquote { margin: 2rem 0; border-left: 2px solid var(--gold); padding-left: 1.5rem; font-family: var(--font-gloock), serif; font-size: 1.5rem; line-height: 1.35; color: var(--paper); }
+.post-body blockquote p { margin: 0; }
+.post-body ul { list-style: disc; padding-left: 1.5rem; }
+.post-body ol { list-style: decimal; padding-left: 1.5rem; }
+.post-body li { margin-top: 0.5rem; }
+.post-body li > p { margin: 0; }
+.post-body ul[data-type="taskList"] { list-style: none; padding-left: 0.25rem; }
+.post-body ul[data-type="taskList"] li { display: flex; gap: 0.6rem; align-items: flex-start; }
+.post-body ul[data-type="taskList"] li > label { margin-top: 0.35rem; }
+.post-body ul[data-type="taskList"] input { accent-color: var(--gold); width: 1rem; height: 1rem; }
+.post-body ul[data-type="taskList"] li[data-checked="true"] > div { text-decoration: line-through; opacity: 0.7; }
+.post-body img { margin: 2rem auto; max-width: 100%; height: auto; border-radius: 2px; }
+.post-body hr { margin: 2.5rem auto; width: 6rem; border: 0; border-top: 2px solid var(--gold); }
+.post-body mark { background: #fbe7a8; color: inherit; padding: 0 0.15em; border-radius: 2px; }
+.post-body code { background: var(--dusk); padding: 0.1em 0.35em; border-radius: 3px; font-size: 0.9em; }
+.post-body pre { background: var(--night); color: var(--starlight); padding: 1rem 1.25rem; border-radius: 4px; overflow-x: auto; font-size: 0.9rem; }
+.post-body pre code { background: none; padding: 0; }
+.post-body table { width: 100%; border-collapse: collapse; font-size: 1rem; display: block; overflow-x: auto; }
+.post-body th, .post-body td { border: 1px solid var(--steel); padding: 0.5rem 0.75rem; vertical-align: top; min-width: 4rem; }
+.post-body th { background: var(--dusk); color: var(--paper); font-weight: 600; text-align: left; }
+.post-body td > p, .post-body th > p { margin: 0; }
+
+/* The rich editor's page */
+.rich-editor-page { outline: none; min-height: 26rem; caret-color: var(--gold-text); }
+.rich-editor-page p.is-editor-empty:first-child::before { content: attr(data-placeholder); float: left; height: 0; pointer-events: none; color: #9aa1b2; }
+.rich-editor-page img.ProseMirror-selectednode, .rich-editor-page [data-resize-container].ProseMirror-selectednode { outline: 3px solid var(--gold); outline-offset: 2px; }
+.rich-editor-page [data-resize-handle] { width: 12px; height: 12px; background: #fff; border: 2px solid var(--gold); border-radius: 2px; z-index: 2; }
+.rich-editor-page table .selectedCell { background: rgba(240, 180, 76, 0.18); }
+.rich-editor-page ul[data-type="taskList"] li > label { user-select: none; }
+.rich-editor-page ::selection { background: rgba(240, 180, 76, 0.35); }

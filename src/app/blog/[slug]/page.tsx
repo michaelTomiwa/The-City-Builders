@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import ReactMarkdown from "react-markdown";
+import { postHtml } from "@/lib/post-html";
 import { supabase, type Post, type PostComment } from "@/lib/supabase";
 import { withStats, readingMinutes, formatPostDate, type PostWithStats } from "@/lib/blog";
 import { Stars } from "@/components/site/stars";
@@ -106,9 +106,7 @@ export default async function BlogPostPage({ params }: PageProps<"/blog/[slug]">
           <CoverArt src={post.cover_image_url} title={post.title} className="mb-12 aspect-[16/9]" />
         )}
 
-        <div className="text-lg leading-[1.8] text-paper-dim [&_a]:text-gold-text [&_a]:underline [&_a]:underline-offset-4 [&_blockquote]:my-8 [&_blockquote]:border-l-2 [&_blockquote]:border-gold [&_blockquote]:pl-6 [&_blockquote]:font-display [&_blockquote]:text-2xl [&_blockquote]:leading-snug [&_blockquote]:text-paper [&_h2]:mt-12 [&_h2]:font-display [&_h2]:text-3xl [&_h2]:text-paper [&_h3]:mt-8 [&_h3]:font-display [&_h3]:text-2xl [&_h3]:text-paper [&_img]:my-8 [&_li]:mt-2 [&_ol]:list-decimal [&_ol]:pl-6 [&_p]:mt-6 [&_strong]:text-paper [&_ul]:list-disc [&_ul]:pl-6 [&>*:first-child]:mt-0">
-          <ReactMarkdown>{post.content}</ReactMarkdown>
-        </div>
+        <div className="post-body" dangerouslySetInnerHTML={{ __html: postHtml(post.content) }} />
 
         <div className="mt-14 flex flex-col gap-6 border-y border-steel py-6 sm:flex-row sm:items-center sm:justify-between">
           <AmenButton slug={post.slug} initial={post.likes ?? 0} />
