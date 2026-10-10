@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase-server";
 import { sendAlert } from "@/lib/push";
 import { recentDuplicate } from "@/lib/duplicates";
+import { plainText } from "@/lib/post-text";
 
 function slugify(title: string) {
   return title
@@ -84,6 +85,9 @@ export async function savePost(formData: FormData) {
     .filter(Boolean)
     .filter((t, i, all) => all.findIndex((x) => x.toLowerCase() === t.toLowerCase()) === i);
 
+  const content = String(formData.get("content") ?? "");
+  if (status !== "draft" && !plainText(content) && !/<img\s/i.test(content)) throw new Error("Write something in the post before publishing it.");
+
   let publishedAt: string | null = null;
   if (status === "publish") publishedAt = existingPublishedAt ?? new Date().toISOString();
   if (status === "schedule") publishedAt = scheduledFor ?? new Date().toISOString();
@@ -92,7 +96,7 @@ export async function savePost(formData: FormData) {
     title,
     slug: await uniqueSlug(supabase, "posts", text(formData, "slug") || title, id),
     excerpt: optional(formData, "excerpt"),
-    content: (formData.get("content") as string) ?? "",
+    content,
     cover_image_url: optional(formData, "cover_image_url"),
     published: status !== "draft",
     published_at: publishedAt,

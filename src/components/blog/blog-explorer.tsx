@@ -8,6 +8,7 @@ import { formatPostDate } from "@/lib/blog";
 import { CoverArt } from "./cover-art";
 import { PostMeta } from "./post-meta";
 import { cn } from "@/lib/utils";
+import { plainText } from "@/lib/post-text";
 
 const sorts = [
   { id: "new", label: "Newest" },
@@ -28,7 +29,7 @@ export function BlogExplorer({ posts, tags }: { posts: PostWithStats[]; tags: st
     const list = posts.filter((p) => {
       if (tag && !(p.tags ?? []).includes(tag)) return false;
       if (!q) return true;
-      return [p.title, p.excerpt ?? "", p.content, ...(p.tags ?? [])].join(" ").toLowerCase().includes(q);
+      return [p.title, p.excerpt ?? "", plainText(p.content), ...(p.tags ?? [])].join(" ").toLowerCase().includes(q);
     });
     return [...list].sort((a, b) => {
       if (sort === "read") return (b.views ?? 0) - (a.views ?? 0);
