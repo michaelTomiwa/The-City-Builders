@@ -42,3 +42,7 @@ next-env.d.ts
 
 .vercel
 .env*
+
+# design screenshots are shared directly, not stored in git
+/design/screens/
+/design/*.zip
