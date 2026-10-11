@@ -16,6 +16,7 @@ import {
   type TeamRole,
   type TeamTask,
 } from "@/lib/teams";
+import { thisWeek } from "@/lib/week";
 import { PrayButton } from "@/components/teams/pray-button";
 import { ReportCard } from "@/components/teams/report-card";
 import { TaskAssignees } from "@/components/teams/task-assignees";
@@ -63,7 +64,7 @@ export default async function TeamSpace({ params, searchParams }: PageProps<"/me
   ];
   const tab = tabs.some((t) => t.id === query.tab) ? (query.tab as string) : "board";
 
-  const [{ data: peopleRows }, { data: postRows }, { data: prayRows }, { data: taskRows }, { data: assignRows }, { data: meetingRows }, { data: meetingAtt }, reports, messages] =
+  const [{ data: peopleRows }, { data: postRows }, { data: prayRows }, { data: taskRows }, { data: assignRows }, { data: meetingRows }, { data: meetingAtt }, reports, messages, weekRes] =
     await Promise.all([
       supabase.rpc("team_people", { p_team: team.id }),
       supabase.from("team_posts").select("*").eq("team_id", team.id).order("created_at", { ascending: false }).limit(50),
@@ -74,7 +75,9 @@ export default async function TeamSpace({ params, searchParams }: PageProps<"/me
       supabase.from("team_meeting_attendance").select("meeting_id, user_id"),
       lead ? supabase.from("team_reports").select("*").eq("team_id", team.id).order("created_at", { ascending: false }).limit(20) : Promise.resolve({ data: [] }),
       lead ? supabase.from("team_messages").select("*").eq("team_id", team.id).order("created_at", { ascending: true }).limit(200) : Promise.resolve({ data: [] }),
+      lead ? supabase.rpc("team_week_progress", { p_team: team.id, p_week: thisWeek() }) : Promise.resolve({ data: [] }),
     ]);
+  const weekOf = new Map(((weekRes.data ?? []) as { user_id: string; done: number; total: number }[]).map((w) => [w.user_id, w]));
 
   const people = (peopleRows ?? []) as TeamPerson[];
   const nameOf = new Map(people.map((p) => [p.user_id, displayName({ full_name: p.full_name, email: null })]));
@@ -408,6 +411,12 @@ export default async function TeamSpace({ params, searchParams }: PageProps<"/me
                     </span>
                     {lead && (
                       <span className="flex flex-wrap items-center gap-4 text-xs text-paper-dim">
+                        {weekOf.get(p.user_id)?.total ? (
+                          <span className={weekOf.get(p.user_id)!.done >= weekOf.get(p.user_id)!.total ? "text-[#24613a]" : ""}>
+                            This week {weekOf.get(p.user_id)!.done}/{weekOf.get(p.user_id)!.total}
+                            {weekOf.get(p.user_id)!.done >= weekOf.get(p.user_id)!.total && " ✓"}
+                          </span>
+                        ) : null}
                         <span>{p.services_14d ?? 0} services (14 days)</span>
                         <span>{p.steps ?? 0} steps</span>
                         <span>{p.lessons ?? 0} lessons</span>

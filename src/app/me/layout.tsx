@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { Stars } from "@/components/site/stars";
 import { MemberNav } from "@/components/members/member-nav";
-import { getMember, getMemberData } from "@/lib/member-data";
+import { getMember, getMemberData, getMyWeek } from "@/lib/member-data";
 import { firstName, initials, lagosToday } from "@/lib/discipleship";
 import { getMyTeamTasks } from "@/lib/teams";
 import { signOutMember } from "./actions";
@@ -57,6 +57,8 @@ export default async function MemberLayout({ children }: LayoutProps<"/me">) {
     .select("id", { count: "exact", head: true })
     .eq("user_id", user.id)
     .lte("due_on", lagosToday());
+  const myWeek = await getMyWeek();
+  const weekLeft = myWeek.items.length - myWeek.ticks.filter((t) => myWeek.items.some((i) => i.id === t.item_id)).length;
   const { data: convo } = await supabase.from("conversations").select("member_unread").eq("member_id", user.id).maybeSingle();
   const handedIn = new Map(submissions.map((s) => [s.assignment_id, s.status]));
   const toDo = assignments.filter((a) => !handedIn.has(a.id) || handedIn.get(a.id) === "needs_work").length;
@@ -85,7 +87,7 @@ export default async function MemberLayout({ children }: LayoutProps<"/me">) {
             </div>
           </div>
           <div className="mt-6">
-            <MemberNav badges={{ assignments: toDo, memory: memoryDue ?? 0, teams: teamTasks.length, messages: convo?.member_unread ?? 0 }} />
+            <MemberNav badges={{ assignments: toDo, memory: memoryDue ?? 0, teams: teamTasks.length, messages: convo?.member_unread ?? 0, week: weekLeft }} />
           </div>
         </div>
       </div>

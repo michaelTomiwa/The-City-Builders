@@ -1,6 +1,7 @@
 import webpush from "web-push";
 import { supabase } from "@/lib/supabase";
 import { VAPID_PUBLIC_KEY } from "@/lib/vapid";
+import { thisWeek } from "@/lib/week";
 
 /*
   Web push alerts. Subscriptions are only readable with PUSH_SECRET, which
@@ -163,5 +164,33 @@ export async function runAssignmentCare() {
     const { sent } = await sendMessagePush(a.push_user ? [a.push_user] : "staff", () => ({ title: a.push_title, body: a.push_body, url: a.push_url }), `care-${a.push_user ?? "staff"}`);
     followUps += sent;
   }
-  return { reminders, followUps, actions: list.length };
+  const week = await sendWeekReminders();
+  return { reminders, followUps, actions: list.length, week };
+}
+
+type WeekTarget = Target & { user_id: string; first: string; done: number; total: number };
+
+/** Monday from 8 AM Lagos: "here's your week". Friday from 6 PM: what's still left. Each goes out once a week. */
+export async function sendWeekReminders(now = Date.now()) {
+  const lagos = new Date(now + 3600_000);
+  const day = lagos.getUTCDay();
+  const hour = lagos.getUTCHours();
+  const kind = day === 1 && hour >= 8 ? "mon" : day === 5 && hour >= 18 ? "fri" : null;
+  if (!kind) return 0;
+  const week = thisWeek(now);
+  const key = `week-${kind}-${week}`;
+  const title = kind === "mon" ? "Your week is ready" : "Finish the week strong";
+  const body = kind === "mon" ? "Here's what to do this week. Tick each one as you go 🙏" : "A few things are still left on your checklist.";
+  const { data, error } = await supabase.rpc("week_reminder_targets", { p_secret: secret(), p_week: week });
+  if (error) throw new Error(error.message);
+  const targets = ((data ?? []) as WeekTarget[]).filter((t) => (kind === "mon" ? true : t.done < t.total));
+  if (!targets.length || !(await claim({ key, title, body }))) return 0;
+  const { sent } = await deliver(targets, (t) => {
+    const left = t.total - t.done;
+    return kind === "mon"
+      ? { title: `Your week, ${t.first}`, body: `${t.total} ${t.total === 1 ? "thing" : "things"} on your list this week. Tick each one as you go 🙏`, url: "/me/week", tag: key }
+      : { title: `${left} ${left === 1 ? "thing" : "things"} left this week`, body: `You've done ${t.done} of ${t.total}, ${t.first}. There's still time before Sunday 💪`, url: "/me/week", tag: key };
+  });
+  await finish(key, sent);
+  return sent;
 }

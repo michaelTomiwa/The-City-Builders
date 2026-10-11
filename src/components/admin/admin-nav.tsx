@@ -29,6 +29,7 @@ const groups = [
       { href: "/admin/teams", label: "Teams" },
       { href: "/admin/programs", label: "Programmes" },
       { href: "/admin/school", label: "School" },
+      { href: "/admin/week", label: "This Week" },
       { href: "/admin/assignments", label: "Assignments", badge: "submissions" as const },
       { href: "/admin/accountability", label: "Faithfulness", badge: "care" as const },
       { href: "/admin/partners", label: "Prayer partners" },

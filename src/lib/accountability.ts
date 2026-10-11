@@ -89,6 +89,8 @@ export function priorityScore(x: {
   quietDays: number | null;
   isLeader: boolean;
   newBeliever: boolean;
+  /** Weeks in a row (ending last week) with nothing ticked on the weekly checklist. */
+  skippedWeeks?: number;
 }) {
   const { ladder: l } = x;
   const reasons: string[] = [];
@@ -113,6 +115,10 @@ export function priorityScore(x: {
   if (x.quietDays !== null && x.quietDays >= 10) {
     score += x.quietDays >= 21 ? 30 : 15;
     reasons.push(`Not active for ${x.quietDays} days`);
+  }
+  if ((x.skippedWeeks ?? 0) >= 2) {
+    score += x.skippedWeeks! * 8;
+    reasons.push(`Weekly checklist untouched ${x.skippedWeeks} weeks running`);
   }
   if (l.plan_id) reasons.push("On a restoration plan");
   score += l.level * 10;
