@@ -158,12 +158,12 @@ export const levels = [
 ];
 
 /** Growth points from everything a member does. */
-export function growthPoints(x: { steps: number; onTime: number; lateWork?: number; lessons?: number; attendance?: number; bibleDays?: number; invites?: number }) {
-  return x.steps + x.onTime * 5 + (x.lateWork ?? 0) * 2 + (x.lessons ?? 0) * 3 + (x.attendance ?? 0) * 2 + (x.bibleDays ?? 0) + (x.invites ?? 0) * 5;
+export function growthPoints(x: { steps: number; onTime: number; lateWork?: number; lessons?: number; attendance?: number; bibleDays?: number; invites?: number; weekTicks?: number }) {
+  return x.steps + x.onTime * 5 + (x.lateWork ?? 0) * 2 + (x.lessons ?? 0) * 3 + (x.attendance ?? 0) * 2 + (x.bibleDays ?? 0) + (x.invites ?? 0) * 5 + (x.weekTicks ?? 0);
 }
 
 export const pointsGuide =
-  "1 point for each step kept or Bible day read, 2 for each service attended or assignment handed in late, 3 for each lesson passed, and 5 for each assignment handed in on time or friend you invite who joins.";
+  "1 point for each step kept, Bible day read or weekly item ticked, 2 for each service attended or assignment handed in late, 3 for each lesson passed, and 5 for each assignment handed in on time or friend you invite who joins.";
 
 export function growth(points: number) {
   let index = 0;

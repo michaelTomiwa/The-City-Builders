@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase-server";
 import { AdminHeader, Panel, Pill } from "@/components/admin/ui";
 import { daysSince, displayName, lagosDateTime, type Member } from "@/lib/discipleship";
 import { lateReasonLabel, levels, priorityScore, suggestedMessage, type Ladder, type Priority } from "@/lib/accountability";
+import { addWeeks, forPerson, inWeek, thisWeek, type WeekItem } from "@/lib/week";
 import { cn } from "@/lib/utils";
 import { askTeamLead, finishPlan, startPlan } from "./actions";
 
@@ -21,10 +22,12 @@ export default async function Accountability({ searchParams }: PageProps<"/admin
   const supabase = await createClient();
   const since = daysAgo(60);
 
-  const [ladderRes, people, teamRoles, notes, lateSubs, assignments, plans, steps, attend, bible, lessons] = await Promise.all([
+  const lastWeek = addWeeks(thisWeek(), -1);
+  const weeks = [lastWeek, addWeeks(lastWeek, -1), addWeeks(lastWeek, -2), addWeeks(lastWeek, -3)];
+  const [ladderRes, people, teamRoles, notes, lateSubs, assignments, plans, steps, attend, bible, lessons, weekItems, weekTicks, weekPicked] = await Promise.all([
     supabase.rpc("accountability_ladder"),
     supabase.from("profiles").select("*").eq("role", "member").eq("status", "active"),
-    supabase.from("team_members").select("user_id, role"),
+    supabase.from("team_members").select("user_id, role, team_id"),
     supabase.from("care_notes").select("member_id, tag").eq("tag", "new-believer"),
     supabase.from("submissions").select("user_id, assignment_id, late_reason, late_note, submitted_at").eq("late", true).gte("submitted_at", since).order("submitted_at", { ascending: false }),
     supabase.from("assignments").select("id, title"),
@@ -33,6 +36,9 @@ export default async function Accountability({ searchParams }: PageProps<"/admin
     supabase.from("attendance").select("user_id, created_at").gte("created_at", since),
     supabase.from("bible_reading").select("user_id, created_at:read_at").gte("read_at", since),
     supabase.from("lesson_progress").select("user_id, created_at:completed_at").gte("completed_at", since),
+    supabase.from("week_items").select("*").is("owner_id", null).lte("start_week", lastWeek),
+    supabase.from("week_ticks").select("item_id, user_id, week_start").gte("week_start", weeks[3]),
+    supabase.from("week_item_members").select("item_id, user_id"),
   ]);
 
   const ladder = new Map(((ladderRes.data ?? []) as Ladder[]).map((l) => [l.user_id, l]));
@@ -46,6 +52,23 @@ export default async function Accountability({ searchParams }: PageProps<"/admin
   for (const row of [...(steps.data ?? []), ...(attend.data ?? []), ...(bible.data ?? []), ...(lessons.data ?? [])] as { user_id: string; created_at: string }[]) {
     if (!lastActive.has(row.user_id) || row.created_at > lastActive.get(row.user_id)!) lastActive.set(row.user_id, row.created_at);
   }
+  // Weekly checklist: how many weeks in a row (ending last week) someone had items and ticked none.
+  const pastorItems = (weekItems.data ?? []) as WeekItem[];
+  const teamsOf = new Map<string, Set<string>>();
+  for (const r of teamRoles.data ?? []) teamsOf.set(r.user_id, (teamsOf.get(r.user_id) ?? new Set()).add(r.team_id));
+  const picked = new Map<string, Set<string>>();
+  for (const r of weekPicked.data ?? []) picked.set(r.item_id, (picked.get(r.item_id) ?? new Set()).add(r.user_id));
+  const tickedWeeks = new Set((weekTicks.data ?? []).map((t) => `${t.user_id}|${t.week_start}`));
+  const skippedWeeks = (m: Member) => {
+    let n = 0;
+    for (const w of weeks) {
+      if (addWeeks(w, 1) <= m.created_at.slice(0, 10)) break;
+      const has = pastorItems.some((i) => inWeek(i, w) && forPerson(i, m.id, teamsOf.get(m.id) ?? new Set(), picked));
+      if (!has || tickedWeeks.has(`${m.id}|${w}`)) break;
+      n++;
+    }
+    return n;
+  };
   const explanationsBy = new Map<string, Priority["explanations"]>();
   for (const s of lateSubs.data ?? []) {
     const list = explanationsBy.get(s.user_id) ?? [];
@@ -63,7 +86,7 @@ export default async function Accountability({ searchParams }: PageProps<"/admin
       const newBeliever = newBelievers.has(m.id) || daysSince(m.created_at) < 60;
       const isLeader = leaders.has(m.id);
       const struggling = explanations.some((e) => e.reason === "struggling" && daysSince(e.at) <= 30);
-      const { score, reasons } = priorityScore({ ladder: l, struggling, quietDays, isLeader, newBeliever });
+      const { score, reasons } = priorityScore({ ladder: l, struggling, quietDays, isLeader, newBeliever, skippedWeeks: skippedWeeks(m) });
       return { id: m.id, name: displayName(m), phone: m.phone, ladder: l, score, reasons, isLeader, newBeliever, quietDays, explanations };
     });
 
