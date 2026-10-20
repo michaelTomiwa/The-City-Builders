@@ -29,7 +29,8 @@ const groups = [
       { href: "/admin/teams", label: "Teams" },
       { href: "/admin/programs", label: "Programmes" },
       { href: "/admin/school", label: "School" },
-      { href: "/admin/week", label: "This Week" },
+      { href: "/admin/instruction", label: "Weekly instruction" },
+      { href: "/admin/week", label: "This Week", badge: "week" as const },
       { href: "/admin/assignments", label: "Assignments", badge: "submissions" as const },
       { href: "/admin/accountability", label: "Faithfulness", badge: "care" as const },
       { href: "/admin/partners", label: "Prayer partners" },
@@ -55,7 +56,7 @@ const groups = [
 export function AdminNav({
   counts,
 }: {
-  counts: { comments: number; prayers: number; members: number; submissions: number; testimonies: number; messages: number; care: number };
+  counts: { comments: number; prayers: number; members: number; submissions: number; testimonies: number; messages: number; care: number; week: number };
 }) {
   const pathname = usePathname();
 

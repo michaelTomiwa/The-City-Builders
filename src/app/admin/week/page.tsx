@@ -6,9 +6,9 @@ import { AdminHeader, Pill } from "@/components/admin/ui";
 import { WeekItemForm } from "@/components/admin/week-item-form";
 import { ProgressRing } from "@/components/members/progress-ring";
 import { displayName } from "@/lib/discipleship";
-import { addWeeks, forPerson, inWeek, mondayOf, thisWeek, weekLabel, type WeekItem, type WeekTick } from "@/lib/week";
+import { addWeeks, forPerson, handedIn, inWeek, mondayOf, thisWeek, weekLabel, type WeekItem, type WeekTick } from "@/lib/week";
 import { cn } from "@/lib/utils";
-import { addWeekItem, copyLastWeek, removeWeekItem, stopRepeating } from "./actions";
+import { addWeekItem, copyLastWeek, removeWeekItem, stopRepeating, updateWeekItem } from "./actions";
 
 export const metadata: Metadata = { title: "This Week" };
 
@@ -68,8 +68,10 @@ export default async function AdminWeek({ searchParams }: PageProps<"/admin/week
     const meant = people.filter((p) => forPerson(i, p.id, teamsOf.get(p.id) ?? new Set(), selected));
     const did = tickedBy.get(i.id) ?? new Map();
     const notes = meant.filter((p) => did.get(p.id)).map((p) => ({ name: p.name, note: did.get(p.id) as string }));
-    return { item: i, meant: meant.length, done: meant.filter((p) => did.has(p.id)).length, notes };
+    const work = ticks.filter((t) => t.item_id === i.id && handedIn(t));
+    return { item: i, meant: meant.length, done: meant.filter((p) => did.has(p.id)).length, notes, handed: work.length, unread: work.filter((t) => !t.reviewed_at).length };
   });
+  const editing = typeof query.edit === "string" ? query.edit : null;
   const totalDone = people.reduce((n, p) => n + p.done, 0);
   const totalAll = people.reduce((n, p) => n + p.total, 0);
   const finished = people.filter((p) => p.done >= p.total).length;
@@ -146,8 +148,25 @@ export default async function AdminWeek({ searchParams }: PageProps<"/admin/week
               </p>
             ) : (
               <ul className="mt-4 space-y-3">
-                {perItem.map(({ item, meant, done, notes }) => (
-                  <li key={item.id} className="rounded-md border border-steel bg-white p-5">
+                {perItem.map(({ item, meant, done, notes, handed, unread }) =>
+                  editing === item.id ? (
+                    <li key={item.id} id={`item-${item.id}`} className="rounded-md border-2 border-gold bg-white p-5">
+                      <p className="mb-3 text-xs font-medium text-gold-text">Editing</p>
+                      <WeekItemForm
+                        week={week}
+                        teams={teams}
+                        members={picker}
+                        action={updateWeekItem}
+                        initial={item}
+                        initialMembers={[...(selected.get(item.id) ?? [])]}
+                        onCancelHref={`/admin/week?w=${week}#item-${item.id}`}
+                      />
+                      {item.repeats && item.start_week < week && (
+                        <p className="mt-3 text-xs text-paper-dim">This item repeats, so changes also show on past weeks. Past ticks are kept.</p>
+                      )}
+                    </li>
+                  ) : (
+                  <li key={item.id} id={`item-${item.id}`} className="rounded-md border border-steel bg-white p-5">
                     <div className="flex flex-wrap items-start gap-3">
                       <div className="min-w-0 flex-1">
                         <p className="font-medium text-paper">{item.title}</p>
@@ -155,6 +174,7 @@ export default async function AdminWeek({ searchParams }: PageProps<"/admin/week
                         <div className="mt-2 flex flex-wrap gap-1.5">
                           <Pill tone="blue">{audienceLabel(item)}</Pill>
                           {item.repeats && <Pill tone="gold">Every week</Pill>}
+                          {item.submit && item.submit !== "none" && <Pill tone={item.submit === "required" ? "red" : "grey"}>📎 Hand-in {item.submit}</Pill>}
                         </div>
                       </div>
                       <div className="text-right">
@@ -167,6 +187,19 @@ export default async function AdminWeek({ searchParams }: PageProps<"/admin/week
                     <div className="mt-3 h-2 overflow-hidden rounded-full bg-dusk">
                       <div className="h-full rounded-full bg-[#3d9a6a]" style={{ width: `${meant ? (done / meant) * 100 : 0}%` }} />
                     </div>
+                    {item.submit && item.submit !== "none" && (
+                      <Link
+                        href={`/admin/week/${item.id}?w=${week}`}
+                        className="mt-3 flex items-center justify-between gap-3 rounded-sm bg-dusk px-3 py-2.5 text-sm hover:bg-dusk-2"
+                      >
+                        <span className="text-paper">
+                          {handed} handed in{item.submit_prompt && <span className="text-paper-dim"> · {item.submit_prompt}</span>}
+                        </span>
+                        <span className="shrink-0 font-medium text-gold-text">
+                          {unread > 0 ? `${unread} to read →` : "Open →"}
+                        </span>
+                      </Link>
+                    )}
                     {notes.length > 0 && (
                       <details className="mt-3">
                         <summary className="cursor-pointer text-sm text-gold-text">
@@ -183,6 +216,9 @@ export default async function AdminWeek({ searchParams }: PageProps<"/admin/week
                     )}
                     {!isPast && (
                       <div className="mt-3 flex gap-3 border-t border-steel pt-3 text-sm">
+                        <Link href={`/admin/week?w=${week}&edit=${item.id}#item-${item.id}`} className="text-gold-text hover:underline">
+                          Edit
+                        </Link>
                         {item.repeats && (
                           <form action={stopRepeating}>
                             <input type="hidden" name="id" value={item.id} />
@@ -200,7 +236,8 @@ export default async function AdminWeek({ searchParams }: PageProps<"/admin/week
                       </div>
                     )}
                   </li>
-                ))}
+                  )
+                )}
               </ul>
             )}
           </section>

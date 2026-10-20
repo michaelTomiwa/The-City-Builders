@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { addWeeks, thisWeek } from "@/lib/week";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase-server";
 import { LogoMark } from "@/components/site/logo-mark";
@@ -36,7 +37,7 @@ export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
     );
   }
 
-  const [{ count: pendingComments }, { count: newPrayers }, { count: pendingMembers }, { count: toReview }, { count: newTestimonies }, { count: unreadChats }, { data: ladder }] = await Promise.all([
+  const [{ count: pendingComments }, { count: newPrayers }, { count: pendingMembers }, { count: toReview }, { count: newTestimonies }, { count: unreadChats }, { data: ladder }, { count: handIns }] = await Promise.all([
     supabase.from("post_comments").select("id", { count: "exact", head: true }).eq("approved", false),
     supabase.from("prayer_requests").select("id", { count: "exact", head: true }).eq("status", "new"),
     supabase.from("profiles").select("id", { count: "exact", head: true }).eq("status", "pending"),
@@ -44,6 +45,12 @@ export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
     supabase.from("testimonies").select("id", { count: "exact", head: true }).eq("status", "pending"),
     supabase.from("conversations").select("member_id", { count: "exact", head: true }).gt("pastor_unread", 0),
     supabase.rpc("accountability_ladder"),
+    supabase
+      .from("week_ticks")
+      .select("item_id", { count: "exact", head: true })
+      .is("reviewed_at", null)
+      .or("body.not.is.null,file_path.not.is.null")
+      .gte("week_start", addWeeks(thisWeek(), -1)),
   ]);
 
   return (
@@ -75,6 +82,7 @@ export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
             submissions: toReview ?? 0,
             testimonies: newTestimonies ?? 0,
             messages: unreadChats ?? 0,
+            week: handIns ?? 0,
             care: ((ladder ?? []) as { level: number }[]).filter((l) => l.level === 3).length,
           }}
         />

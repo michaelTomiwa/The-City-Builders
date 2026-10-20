@@ -7,6 +7,7 @@ import { NotifyMe } from "./notify-me";
 const footerLinks = [
   { href: "/live", label: "Watch live" },
   { href: "/sermons", label: "The watch" },
+  { href: "/week", label: "This week" },
   { href: "/events", label: "Gatherings" },
   { href: "/tools", label: "Resources" },
   { href: "/prayer", label: "Prayer wall" },

@@ -23,12 +23,28 @@ export async function tickWeekItem(itemId: string, done: boolean, note?: string)
     const { error } = await supabase
       .from("week_ticks")
       .upsert({ item_id: itemId, user_id: user.id, week_start: week, note: note?.trim().slice(0, 500) || null }, { onConflict: "item_id,user_id,week_start" });
-    if (error) return { error: "That didn't save. Try again." };
+    if (error) return { error: error.message.includes("handed in") ? error.message : "That didn't save. Try again." };
   } else {
     const { error } = await supabase.from("week_ticks").delete().eq("item_id", itemId).eq("user_id", user.id).eq("week_start", week);
     if (error) return { error: "That didn't save. Try again." };
   }
   revalidatePath("/me", "layout");
+  return { ok: true };
+}
+
+/** Hand in a write-up and/or a file for one of this week's items (this ticks it too). */
+export async function handInWeekItem(itemId: string, input: { body: string; filePath: string | null; fileName: string | null }) {
+  const { supabase, user } = await member();
+  const body = input.body.trim().slice(0, 20000);
+  const filePath = input.filePath && input.filePath.startsWith(`${user.id}/`) ? input.filePath.slice(0, 300) : null;
+  if (!body && !filePath) return { error: "Write something or attach a file first." };
+  const { error } = await supabase.from("week_ticks").upsert(
+    { item_id: itemId, user_id: user.id, week_start: thisWeek(), body: body || null, file_path: filePath, file_name: filePath ? (input.fileName ?? "File").slice(0, 200) : null },
+    { onConflict: "item_id,user_id,week_start" }
+  );
+  if (error) return { error: error.message.includes("handed in") ? error.message : "That didn't save. Try again." };
+  revalidatePath("/me", "layout");
+  revalidatePath("/admin/week", "layout");
   return { ok: true };
 }
 
