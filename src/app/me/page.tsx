@@ -9,6 +9,8 @@ import {
   type Checkin,
   type Step,
 } from "@/lib/discipleship";
+import { currentInstruction, lagosDayNumber } from "@/lib/instruction";
+import { InstructionToday } from "@/components/site/instruction-view";
 import { StepCard } from "@/components/members/step-card";
 import { ProgressRing } from "@/components/members/progress-ring";
 import { ImHere } from "@/components/members/im-here";
@@ -51,7 +53,7 @@ export default async function TodayPage() {
 
   const doneBy = new Map<string, Checkin>(checkins.map((c) => [c.step_id, c]));
   const { g, streakDays: days } = memberGrowth(data);
-  const myWeek = await getMyWeek();
+  const [myWeek, instruction] = await Promise.all([getMyWeek(), currentInstruction(supabase)]);
   const weekDone = myWeek.items.filter((i) => myWeek.ticks.some((t) => t.item_id === i.id)).length;
 
   const active = programs
@@ -209,6 +211,7 @@ export default async function TodayPage() {
         </section>
 
         <aside className="space-y-6">
+          {instruction && <InstructionToday ins={instruction} day={lagosDayNumber()} />}
           {myWeek.items.length > 0 && (
             <Link href="/me/week" className="flex items-center gap-4 rounded-md border border-steel bg-white p-5 transition-colors hover:border-gold">
               <ProgressRing value={weekDone / myWeek.items.length} size={60} stroke={6} color="#3d9a6a" label={`${weekDone}/${myWeek.items.length}`} />

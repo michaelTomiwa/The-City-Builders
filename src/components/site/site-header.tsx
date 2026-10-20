@@ -10,6 +10,7 @@ import { ScrollProgress } from "./scroll-progress";
 
 const baseLinks = [
   { href: "/sermons", label: "The watch" },
+  { href: "/week", label: "This week" },
   { href: "/blog", label: "Blog" },
   { href: "/events", label: "Gatherings" },
   { href: "/tools", label: "Resources" },

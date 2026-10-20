@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
-import { getMyWeek } from "@/lib/member-data";
+import { getMember, getMyWeek } from "@/lib/member-data";
+import { currentInstruction, lagosDayNumber } from "@/lib/instruction";
+import { InstructionToday } from "@/components/site/instruction-view";
 import { daysLeft, weekLabel } from "@/lib/week";
-import { WeekChecklist, type ChecklistItem } from "@/components/members/week-checklist";
+import { WeekChecklist, type ChecklistItem, type TickInfo } from "@/components/members/week-checklist";
 import { ProgressRing } from "@/components/members/progress-ring";
 import { addMyWeekItem, removeMyWeekItem } from "../week-actions";
 import { cn } from "@/lib/utils";
@@ -9,15 +11,25 @@ import { cn } from "@/lib/utils";
 export const metadata: Metadata = { title: "This week" };
 
 export default async function MyWeek() {
-  const { week, items, ticks, history, streak, teamNames } = await getMyWeek();
+  const [{ week, items, ticks, history, streak, teamNames }, { supabase, user }] = await Promise.all([getMyWeek(), getMember()]);
+  const withFiles = ticks.filter((t) => t.file_path);
+  const [instruction, ...urls] = await Promise.all([
+    currentInstruction(supabase),
+    ...withFiles.map((t) => supabase.storage.from("submissions").createSignedUrl(t.file_path!, 60 * 60).then((r) => r.data?.signedUrl ?? null)),
+  ]);
+  const fileUrl = new Map(withFiles.map((t, i) => [t.item_id, urls[i] as string | null]));
   const left = daysLeft();
-  const ticked = Object.fromEntries(ticks.map((t) => [t.item_id, t.note]));
+  const ticked: Record<string, TickInfo> = Object.fromEntries(
+    ticks.map((t) => [t.item_id, { note: t.note, body: t.body, filePath: t.file_path, fileName: t.file_name, fileUrl: fileUrl.get(t.item_id) ?? null, feedback: t.feedback }])
+  );
   const done = items.filter((i) => i.id in ticked).length;
   const list: ChecklistItem[] = items.map((i) => ({
     id: i.id,
     title: i.title,
     details: i.details,
     personal: Boolean(i.owner_id),
+    submit: i.submit ?? "none",
+    prompt: i.submit_prompt ?? null,
     group: i.owner_id ? "My own" : i.audience === "team" && i.team_id ? `For ${teamNames.get(i.team_id) ?? "your team"}` : "From Pastor Michael",
   }));
   list.sort((a, b) => (a.personal === b.personal ? 0 : a.personal ? 1 : -1));
@@ -42,7 +54,7 @@ export default async function MyWeek() {
         </div>
 
         <div className="mt-8">
-          {list.length > 0 && <WeekChecklist items={list} ticked={ticked} removeAction={removeMyWeekItem} />}
+          {list.length > 0 && <WeekChecklist items={list} ticked={ticked} userId={user?.id ?? ""} removeAction={removeMyWeekItem} />}
         </div>
 
         <form action={addMyWeekItem} className="mt-8 rounded-md border border-dashed border-steel bg-white/60 p-4">
@@ -65,6 +77,7 @@ export default async function MyWeek() {
       </div>
 
       <aside className="space-y-6 lg:self-start">
+        {instruction && <InstructionToday ins={instruction} day={lagosDayNumber()} />}
         <section className="on-night rounded-md bg-night p-5 text-starlight">
           <p className="text-sm text-lamp">Weekly streak</p>
           <p className="mt-1 font-display text-5xl">{streak}</p>

@@ -2,6 +2,7 @@ import webpush from "web-push";
 import { supabase } from "@/lib/supabase";
 import { VAPID_PUBLIC_KEY } from "@/lib/vapid";
 import { thisWeek } from "@/lib/week";
+import { currentInstruction, lagosDayNumber } from "@/lib/instruction";
 
 /*
   Web push alerts. Subscriptions are only readable with PUSH_SECRET, which
@@ -93,6 +94,20 @@ export async function sendDailyReminders(day: string) {
   });
   await finish(key, sent);
   return { sent, members: new Set(rows.map((r) => r.user_id)).size };
+}
+
+/** 6 AM on a fast day in this week's instruction: a reminder to every phone with alerts on. */
+export async function sendFastDayAlert(day: string, now = Date.now()) {
+  const ins = await currentInstruction(supabase, now);
+  const today = lagosDayNumber(now);
+  if (!ins || !ins.fast_days.includes(today)) return null;
+  const reading = ins.readings[today - 1]?.trim();
+  return sendAlert({
+    key: `fast-${day}`,
+    title: "Today is a fast day 🙏",
+    body: [ins.fast_plan, reading ? `Today's reading: ${reading}` : null].filter(Boolean).join(" · ") || ins.theme,
+    url: "/week",
+  });
 }
 
 /** Monday morning: tell the pastor and staff the weekly report is ready. */

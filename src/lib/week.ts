@@ -18,9 +18,28 @@ export type WeekItem = {
   end_week: string | null;
   sort: number;
   created_at: string;
+  submit?: "none" | "optional" | "required";
+  submit_prompt?: string | null;
 };
 
-export type WeekTick = { item_id: string; user_id: string; week_start: string; note: string | null; created_at: string };
+export type WeekTick = {
+  item_id: string;
+  user_id: string;
+  week_start: string;
+  note: string | null;
+  created_at: string;
+  body?: string | null;
+  file_path?: string | null;
+  file_name?: string | null;
+  updated_at?: string;
+  feedback?: string | null;
+  reviewed_at?: string | null;
+};
+
+/** Whether a tick has something handed in (a write-up or a file). */
+export function handedIn(t: Pick<WeekTick, "body" | "file_path"> | undefined | null) {
+  return Boolean(t && (t.body?.trim() || t.file_path));
+}
 
 /** The Monday (YYYY-MM-DD) of the week a date falls in. */
 export function mondayOf(date: string) {
