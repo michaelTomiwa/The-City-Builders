@@ -1,6 +1,6 @@
 import Link from "next/link";
 import ReactMarkdown from "react-markdown";
-import { getMember, getMemberData, memberGrowth } from "@/lib/member-data";
+import { getMember, getMemberData, getMyWeek, memberGrowth } from "@/lib/member-data";
 import {
   dueLabel,
   firstName,
@@ -51,6 +51,8 @@ export default async function TodayPage() {
 
   const doneBy = new Map<string, Checkin>(checkins.map((c) => [c.step_id, c]));
   const { g, streakDays: days } = memberGrowth(data);
+  const myWeek = await getMyWeek();
+  const weekDone = myWeek.items.filter((i) => myWeek.ticks.some((t) => t.item_id === i.id)).length;
 
   const active = programs
     .map((p) => ({ p, ...programPhase(p, today) }))
@@ -207,6 +209,17 @@ export default async function TodayPage() {
         </section>
 
         <aside className="space-y-6">
+          {myWeek.items.length > 0 && (
+            <Link href="/me/week" className="flex items-center gap-4 rounded-md border border-steel bg-white p-5 transition-colors hover:border-gold">
+              <ProgressRing value={weekDone / myWeek.items.length} size={60} stroke={6} color="#3d9a6a" label={`${weekDone}/${myWeek.items.length}`} />
+              <span className="min-w-0">
+                <span className="block font-display text-xl text-paper">This week</span>
+                <span className="block text-sm text-paper-dim">
+                  {weekDone === myWeek.items.length ? "All done. Well done! 🙏" : `${myWeek.items.length - weekDone} left to tick`}
+                </span>
+              </span>
+            </Link>
+          )}
           {notices.length > 0 && (
             <section className="on-night rounded-md bg-night p-5 text-starlight">
               <h2 className="text-sm text-lamp">A word from the pastor</h2>
