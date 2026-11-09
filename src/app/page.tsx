@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { churchJsonLd, jsonLd, websiteJsonLd } from "@/lib/seo";
+import { churchJsonLd, jsonLd, upcomingServicesJsonLd, websiteJsonLd } from "@/lib/seo";
 import { churchFaqs } from "@/lib/faq";
 import { supabase, type Post, type ChurchEvent } from "@/lib/supabase";
 import { LiveStream } from "@/components/site/live-stream";
@@ -123,6 +123,7 @@ export default async function HomePage() {
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={jsonLd(churchJsonLd(settings?.logo_url, settings?.church_address))} />
       <script type="application/ld+json" dangerouslySetInnerHTML={jsonLd(websiteJsonLd())} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={jsonLd(upcomingServicesJsonLd())} />
       {/* Hero: the city at night, keeping watch */}
       <section className="on-night sky relative overflow-hidden text-starlight">
         <Stars shooting />
