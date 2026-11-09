@@ -1,5 +1,5 @@
 import { siteUrl } from "@/lib/site";
-import { CHANNEL_URL, CHURCH_EMAIL, STREAMS_URL, services } from "@/lib/schedule";
+import { CHANNEL_URL, CHURCH_EMAIL, STREAMS_URL, serviceOccurrences, services } from "@/lib/schedule";
 
 /*
   Structured data (JSON-LD) so Google understands the church: who we are,
@@ -81,4 +81,34 @@ export function pastorJsonLd(image: string, bio: string) {
     worksFor: { "@id": `${siteUrl}/#church`, "@type": "Church", name: "The City Builders" },
     sameAs: [CHANNEL_URL],
   };
+}
+
+/** "2026-11-09T23:00:00+01:00": a time written in Lagos time, as Google prefers for events. */
+function lagosIso(iso: string) {
+  return new Date(Date.parse(iso) + 3600_000).toISOString().replace(/\.\d{3}Z$/, "+01:00");
+}
+
+/**
+ * The next week of Night Watch and Morning Prayers as dated online events,
+ * which Google can show as event results ("Night Watch, Tonight 11 PM").
+ */
+export function upcomingServicesJsonLd(now = Date.now()) {
+  return serviceOccurrences(now, 7)
+    .filter((o) => Date.parse(o.starts_at) > now)
+    .map((o) => ({
+      "@context": "https://schema.org",
+      "@type": "Event",
+      name: `${o.title} with The City Builders`,
+      description: `${o.description ?? ""} Live online with Pastor Michael Tomiwa. Free to join from anywhere.`.trim(),
+      startDate: lagosIso(o.starts_at),
+      endDate: o.ends_at ? lagosIso(o.ends_at) : undefined,
+      eventAttendanceMode: "https://schema.org/OnlineEventAttendanceMode",
+      eventStatus: "https://schema.org/EventScheduled",
+      location: { "@type": "VirtualLocation", url: absolute("/live") },
+      image: [absolute("/opengraph-image")],
+      organizer: { "@type": "Organization", name: "The City Builders", url: siteUrl },
+      performer: { "@type": "Person", name: "Pastor Michael Tomiwa" },
+      offers: { "@type": "Offer", price: 0, priceCurrency: "NGN", availability: "https://schema.org/InStock", url: absolute("/live"), validFrom: lagosIso(new Date(now - 86_400_000).toISOString()) },
+      isAccessibleForFree: true,
+    }));
 }

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { getRecentVideos } from "@/lib/youtube";
 import { Stars } from "@/components/site/stars";
+import { jsonLd, upcomingServicesJsonLd } from "@/lib/seo";
 import { WatchRoom, type Replay } from "@/components/live/watch-room";
 
 export const revalidate = 300;
@@ -17,6 +18,7 @@ export default async function LivePage() {
 
   return (
     <div className="on-night relative min-h-[calc(100vh-4rem)] overflow-hidden bg-night text-starlight">
+      <script type="application/ld+json" dangerouslySetInnerHTML={jsonLd(upcomingServicesJsonLd())} />
       <Stars />
       <div className="relative mx-auto max-w-7xl px-4 pt-10 sm:px-6 sm:pt-14">
         <h1 className="font-display text-[clamp(2.4rem,5vw,3.75rem)] leading-none">The watch room</h1>
