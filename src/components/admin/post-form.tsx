@@ -44,6 +44,7 @@ export function PostForm({ post, action }: { post?: Post; action: (formData: For
   const [slug, setSlug] = useState(post?.slug ?? "");
   const [slugTouched, setSlugTouched] = useState(Boolean(post));
   const [cover, setCover] = useState(post?.cover_image_url ?? "");
+  const [excerpt, setExcerpt] = useState(post?.excerpt ?? "");
   const [status, setStatus] = useState<"draft" | "publish" | "schedule">(initialStatus);
   const initialHtml = post?.content ? (isHtml(post.content) ? post.content : markdownToHtml(post.content)) : "";
 
@@ -95,9 +96,11 @@ export function PostForm({ post, action }: { post?: Post; action: (formData: For
           <label htmlFor="excerpt" className={fieldLabel}>
             Summary
           </label>
-          <Textarea id="excerpt" name="excerpt" rows={2} defaultValue={post?.excerpt ?? ""} className="mt-2 bg-white" />
-          <p className={fieldHint}>Shown on the blog page and when the post is shared.</p>
+          <Textarea id="excerpt" name="excerpt" rows={2} value={excerpt} onChange={(e) => setExcerpt(e.target.value)} className="mt-2 bg-white" />
+          <p className={fieldHint}>Shown on the blog page, on Google and when the post is shared.</p>
         </div>
+
+        <SearchPreview title={title} slug={slug} summary={excerpt} />
 
         <div>
           <span className={fieldLabel}>Post</span>
@@ -181,5 +184,42 @@ export function PostForm({ post, action }: { post?: Post; action: (formData: For
         </Button>
       </aside>
     </form>
+  );
+}
+
+/** How the post will look on Google, with gentle tips on the title and summary length. */
+function SearchPreview({ title, slug, summary }: { title: string; slug: string; summary: string }) {
+  const t = title.trim();
+  const d = summary.trim();
+  const tips: string[] = [];
+  if (!t) tips.push("Add a title.");
+  else if (t.length < 25) tips.push("The title is short. Say what the post helps with, e.g. \"Prayer points for a new season\".");
+  else if (t.length > 60) tips.push(`Google cuts titles at about 60 characters (this one is ${t.length}). Put the important words first.`);
+  if (!d) tips.push("Add a summary: Google shows it under the title, and people decide from it whether to click.");
+  else if (d.length < 70) tips.push("The summary is short. Aim for one or two sentences (70 to 155 characters).");
+  else if (d.length > 160) tips.push(`Google shows about 155 characters of the summary (this one is ${d.length}).`);
+  if (t && !/\b(how|what|why|when|prayer|pray|fast|points|meaning|guide)\b/i.test(`${t} ${d}`)) {
+    tips.push("Tip: people search in questions. Words like \"how to\", \"prayer points\" or \"meaning\" help the right people find this.");
+  }
+  const cut = (s: string, n: number) => (s.length > n ? `${s.slice(0, n - 1).trimEnd()}…` : s);
+
+  return (
+    <div className="rounded-md border border-steel bg-white p-4">
+      <p className="text-xs font-medium uppercase tracking-wide text-paper-dim">How it looks on Google</p>
+      <div className="mt-3 font-sans">
+        <p className="truncate text-xs text-[#4d5156]">city-builders-church.vercel.app › blog › {slug || "…"}</p>
+        <p className="mt-0.5 text-lg leading-snug text-[#1a0dab]">{t ? cut(t, 62) : "Your title"} — The City Builders</p>
+        <p className="mt-0.5 text-sm leading-snug text-[#4d5156]">{d ? cut(d, 158) : "Your summary appears here."}</p>
+      </div>
+      {tips.length > 0 ? (
+        <ul className="mt-3 space-y-1 border-t border-steel pt-3 text-xs text-paper-dim">
+          {tips.map((tip) => (
+            <li key={tip}>• {tip}</li>
+          ))}
+        </ul>
+      ) : (
+        <p className="mt-3 border-t border-steel pt-3 text-xs text-[#24613a]">✓ Good length for Google.</p>
+      )}
+    </div>
   );
 }

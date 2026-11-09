@@ -2,10 +2,11 @@ import { createClient } from "@/lib/supabase-server";
 import { AdminHeader, Panel, fieldHint, fieldLabel, smallButton } from "@/components/admin/ui";
 import { ConfirmButton } from "@/components/admin/confirm-button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { ImageField } from "@/components/admin/image-field";
 import { DEFAULT_PASTOR_IMAGE } from "@/lib/settings";
-import { deleteGivingLink, saveAnnouncement, saveBrand, saveGivingLink } from "../actions";
+import { deleteGivingLink, saveAnnouncement, saveAboutChurch, saveBrand, saveGivingLink } from "../actions";
 
 const STORAGE_LIMIT = 1024 * 1024 * 1024; // Supabase free plan: 1 GB of files
 
@@ -81,6 +82,41 @@ export default async function AdminSettings({ searchParams }: PageProps<"/admin/
           <Button type="submit" className="mt-6">
             Save logo and photos
           </Button>
+        </form>
+      </Panel>
+
+      <Panel className="mt-6">
+        <h2 className="font-display text-2xl text-paper">About the pastor and the church</h2>
+        <p className="mt-1 text-sm text-paper-dim">Shown on the pastor&apos;s page and the questions page, and given to Google so it knows who leads the church and where.</p>
+        {params.saved === "about" && (
+          <p className="mt-4 rounded-md border border-[#bfe0c8] bg-[#eef8f0] px-4 py-2 text-sm text-[#24613a]" role="status">
+            Saved.
+          </p>
+        )}
+        <form action={saveAboutChurch} className="mt-5 space-y-5">
+          <div>
+            <label htmlFor="pastor_bio" className={fieldLabel}>
+              Pastor Michael&apos;s bio
+            </label>
+            <Textarea
+              id="pastor_bio"
+              name="pastor_bio"
+              rows={7}
+              maxLength={5000}
+              defaultValue={settings?.pastor_bio ?? ""}
+              placeholder={"A few paragraphs in your own words: your calling, how the City Builders began, what you teach, your family if you'd like.\n\nLeave a blank line between paragraphs."}
+              className="mt-2 bg-white"
+            />
+            <p className={fieldHint}>Google trusts a church more when it can see who leads it. Until you write one, the page uses a short default.</p>
+          </div>
+          <div>
+            <label htmlFor="church_address" className={fieldLabel}>
+              Where you meet in person (optional)
+            </label>
+            <Input id="church_address" name="church_address" maxLength={300} defaultValue={settings?.church_address ?? ""} placeholder="e.g. 12 Example Street, Ikeja, Lagos" className="mt-2 bg-white" />
+            <p className={fieldHint}>Leave it empty if you only meet online. Use the same address as your Google Business Profile.</p>
+          </div>
+          <Button type="submit">Save</Button>
         </form>
       </Panel>
 

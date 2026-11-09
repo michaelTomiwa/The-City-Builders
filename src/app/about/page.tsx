@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Image from "next/image";
+import Link from "next/link";
 import { DEFAULT_PASTOR_IMAGE, getSiteSettings } from "@/lib/settings";
 import { Skyline } from "@/components/site/skyline";
 import { Reveal } from "@/components/site/reveal";
@@ -62,6 +63,9 @@ export default async function AboutPage() {
                 prophetic — through Night Watch services, Morning Prayers, and
                 ongoing word for the season.
               </p>
+              <Link href="/pastor" className="mt-3 inline-block text-sm font-medium text-gold-text hover:underline">
+                More about Pastor Michael →
+              </Link>
             </div>
             <div>
               <h2 className="font-display text-2xl text-paper">Where we gather</h2>
