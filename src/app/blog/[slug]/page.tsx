@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { absolute, jsonLd } from "@/lib/seo";
+import { faqJsonLd, postFaq } from "@/lib/post-faq";
+import { topicSlug } from "@/lib/topics";
 import { WhatsAppShare } from "@/components/site/whatsapp-share";
 import { siteUrl } from "@/lib/site";
 import { notFound } from "next/navigation";
@@ -83,6 +85,7 @@ export default async function BlogPostPage({ params }: PageProps<"/blog/[slug]">
     ...candidates.filter((p) => !(p.tags ?? []).some((t) => postTags.has(t))),
   ].slice(0, 3);
 
+  const faq = postFaq(postHtml(post.content));
   const articleLd = {
     "@context": "https://schema.org",
     "@type": "BlogPosting",
@@ -91,7 +94,7 @@ export default async function BlogPostPage({ params }: PageProps<"/blog/[slug]">
     image: absolute(post.cover_image_url || `/blog/${post.slug}/opengraph-image`),
     datePublished: post.published_at ?? undefined,
     dateModified: post.updated_at ?? post.published_at ?? undefined,
-    author: { "@type": "Person", name: "Pastor Michael Tomiwa" },
+    author: { "@type": "Person", name: "Pastor Michael Tomiwa", url: absolute("/pastor") },
     publisher: { "@id": `${siteUrl}/#church`, "@type": "Church", name: "The City Builders" },
     mainEntityOfPage: absolute(`/blog/${post.slug}`),
     keywords: (post.tags ?? []).join(", ") || undefined,
@@ -100,6 +103,7 @@ export default async function BlogPostPage({ params }: PageProps<"/blog/[slug]">
   return (
     <article>
       <script type="application/ld+json" dangerouslySetInnerHTML={jsonLd(articleLd)} />
+      {faq.length > 0 && <script type="application/ld+json" dangerouslySetInnerHTML={jsonLd(faqJsonLd(faq))} />}
       <header className="on-night sky relative overflow-hidden text-starlight">
         <Stars />
         <Celestial />
@@ -108,7 +112,13 @@ export default async function BlogPostPage({ params }: PageProps<"/blog/[slug]">
             All posts
           </Link>
           {(post.tags ?? []).length > 0 && (
-            <p className="hero-rise mt-6 text-lamp [animation-delay:60ms]">{(post.tags ?? []).join(", ")}</p>
+            <p className="hero-rise mt-6 flex flex-wrap gap-x-3 text-lamp [animation-delay:60ms]">
+              {(post.tags ?? []).map((t) => (
+                <Link key={t} href={`/topics/${topicSlug(t)}`} className="underline-offset-4 hover:underline">
+                  {t}
+                </Link>
+              ))}
+            </p>
           )}
           <h1 className="hero-rise mt-3 font-display text-[clamp(2.4rem,6vw,4.25rem)] leading-[1.04] [animation-delay:120ms]">
             {post.title}
@@ -117,7 +127,9 @@ export default async function BlogPostPage({ params }: PageProps<"/blog/[slug]">
             <p className="hero-rise mt-5 text-lg leading-relaxed text-starlight-dim [animation-delay:180ms]">{post.excerpt}</p>
           )}
           <div className="hero-rise mt-8 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-starlight-dim [animation-delay:240ms]">
-            <span className="text-starlight">Pastor Michael Tomiwa</span>
+            <Link href="/pastor" className="text-starlight underline-offset-4 hover:text-lamp hover:underline">
+              Pastor Michael Tomiwa
+            </Link>
             {post.published_at && <span>{formatPostDate(post.published_at)}</span>}
             <span className="inline-flex items-center gap-1.5">
               <MetaIcon name="clock" />

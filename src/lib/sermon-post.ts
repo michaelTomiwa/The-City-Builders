@@ -15,13 +15,14 @@ Write a blog post of about 1,200 to 1,500 words that:
 - Writes out every scripture he referenced in full, in the KJV, with the reference, as a quote (>).
 - Includes 2 or 3 short memorable lines from the message as quotes.
 - Ends with a short "This week" section (one or two things to do) and a closing prayer.
+- After the prayer, adds a section headed "## Questions this message answers" with 3 questions people might type into Google about this topic (each as a ### heading, e.g. "### How do I know what season I am in?"), each answered in 2 or 3 plain sentences from the message.
 - Leaves out songs, announcements, greetings and filler.
 - If a word or name in the transcript is unclear, make your best guess and list it at the end under PLEASE CHECK so the pastor can confirm.
 
 Reply in exactly this shape, in Markdown:
 
-TITLE: (short and strong)
-SUMMARY: (one or two sentences for the blog list and Google)
+TITLE: (under 60 characters; use the words people would search for, e.g. "Prayer points for…", "How to…", "What … means")
+SUMMARY: (one or two sentences, 120 to 155 characters, that tell a Google searcher what they will get)
 TAGS: (2 to 4, comma separated, e.g. Prayer, Seasons, Faith)
 POST:
 (the post itself)

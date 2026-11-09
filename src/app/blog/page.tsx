@@ -8,6 +8,7 @@ import { CoverArt } from "@/components/blog/cover-art";
 import { PostMeta } from "@/components/blog/post-meta";
 import { BlogExplorer } from "@/components/blog/blog-explorer";
 import { SubscribeForm } from "@/components/site/subscribe-form";
+import { topicSlug } from "@/lib/topics";
 
 export const revalidate = 60;
 
@@ -120,6 +121,20 @@ export default async function BlogPage() {
               </div>
             </aside>
           </div>
+        )}
+
+        {tags.length > 0 && (
+          <nav aria-label="Topics" className="mt-16 flex flex-wrap items-center gap-2">
+            <span className="mr-1 text-sm text-paper-dim">Browse by topic</span>
+            {tags.map((t) => (
+              <Link key={t} href={`/topics/${topicSlug(t)}`} className="rounded-full border border-steel bg-white px-3.5 py-1 text-sm text-paper hover:border-gold hover:text-gold-text">
+                {t}
+              </Link>
+            ))}
+            <Link href="/week" className="rounded-full border border-gold/50 bg-[#fdf7ea] px-3.5 py-1 text-sm text-gold-text hover:border-gold">
+              Weekly prayer points
+            </Link>
+          </nav>
         )}
 
         {rest.length > 0 && (

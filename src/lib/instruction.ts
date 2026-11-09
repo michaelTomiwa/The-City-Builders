@@ -76,3 +76,40 @@ export function instructionMessage(ins: Instruction) {
   lines.push("", "Join us: Night Watch 11 PM and Morning Prayers 7 AM, Lagos time.");
   return lines.join("\n");
 }
+
+/** Published weekly instructions up to this week, newest first: the prayer-points archive. */
+export async function instructionArchive(supabase: SupabaseClient, now = Date.now()) {
+  const { data } = await supabase
+    .from("week_instructions")
+    .select("week_start, theme, prayer_points, fast_days, updated_at")
+    .eq("status", "published")
+    .lte("week_start", thisWeek(now))
+    .order("week_start", { ascending: false });
+  return (data ?? []) as Pick<Instruction, "week_start" | "theme" | "prayer_points" | "fast_days" | "updated_at">[];
+}
+
+/** A search-friendly title for a week's instruction. */
+export function instructionTitle(ins: Pick<Instruction, "theme" | "fast_days">) {
+  return `${ins.theme}: prayer points${ins.fast_days.length ? ", fasting" : ""} and Bible reading`;
+}
+
+/** Plain questions and answers about a week (for the page and for Google). */
+export function instructionFaq(ins: Instruction) {
+  const out: { question: string; answer: string }[] = [];
+  if (ins.prayer_points.length) {
+    out.push({
+      question: `What are the prayer points for "${ins.theme}"?`,
+      answer: ins.prayer_points.map((p, i) => `${i + 1}. ${p}`).join(" ") + (ins.prayer_plan ? ` ${ins.prayer_plan}.` : ""),
+    });
+  }
+  if (ins.fast_days.length) {
+    out.push({
+      question: "When and how should I fast this week?",
+      answer: `Fast on ${fastDaysLabel(ins.fast_days)}${ins.fast_plan ? `: ${ins.fast_plan}` : ""}. If you have a health condition, are pregnant or take medication, speak to a doctor first and choose a gentler fast.`,
+    });
+  }
+  const reads = ins.readings.map((r, i) => (r.trim() ? `${dayNames[i]}: ${r.trim()}` : "")).filter(Boolean);
+  if (reads.length) out.push({ question: "What Bible passages should I read this week?", answer: `${reads.join(". ")}.` });
+  if (ins.memory_verse) out.push({ question: "What is this week's memory verse?", answer: ins.memory_verse });
+  return out;
+}

@@ -419,6 +419,25 @@ export async function saveBrand(formData: FormData) {
   redirect("/admin/settings?saved=brand");
 }
 
+/** The pastor's bio and the church's address: shown on the site and to Google. */
+export async function saveAboutChurch(formData: FormData) {
+  const { supabase } = await staff();
+  check(
+    (
+      await supabase
+        .from("site_settings")
+        .update({
+          pastor_bio: text(formData, "pastor_bio").slice(0, 5000) || null,
+          church_address: text(formData, "church_address").slice(0, 300) || null,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", 1)
+    ).error
+  );
+  revalidatePath("/", "layout");
+  redirect("/admin/settings?saved=about");
+}
+
 /** "Sermon to post": turns Claude's reply into a draft post with the video at the top, then opens it in the editor. */
 export async function createSermonDraft(formData: FormData) {
   const { supabase, user } = await staff();

@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { churchJsonLd, jsonLd } from "@/lib/seo";
+import { churchJsonLd, jsonLd, websiteJsonLd } from "@/lib/seo";
+import { churchFaqs } from "@/lib/faq";
 import { supabase, type Post, type ChurchEvent } from "@/lib/supabase";
 import { LiveStream } from "@/components/site/live-stream";
 import { RecentSessions } from "@/components/site/recent-sessions";
@@ -114,11 +115,14 @@ export default async function HomePage() {
     getSiteSettings(),
     supabase.from("testimonies").select("id, title, body, display_name").eq("status", "approved").order("created_at", { ascending: false }).limit(3),
   ]);
+  const faqs = churchFaqs(settings?.church_address);
+  const homeFaqs = faqs.filter((f) => /time is Night Watch|join a service|Where is the church|this week's prayer points/.test(f.question));
   const testimonies = (testimonyRows ?? []) as { id: string; title: string; body: string; display_name: string | null }[];
 
   return (
     <>
-      <script type="application/ld+json" dangerouslySetInnerHTML={jsonLd(churchJsonLd(settings?.logo_url))} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={jsonLd(churchJsonLd(settings?.logo_url, settings?.church_address))} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={jsonLd(websiteJsonLd())} />
       {/* Hero: the city at night, keeping watch */}
       <section className="on-night sky relative overflow-hidden text-starlight">
         <Stars shooting />
@@ -428,6 +432,26 @@ export default async function HomePage() {
             </Link>
           </div>
         </div>
+      </section>
+
+      {/* Questions people ask (also given to Google as FAQ data) */}
+      <section className="border-t border-steel">
+        <Reveal className="mx-auto grid max-w-6xl gap-10 px-6 py-20 lg:grid-cols-[18rem_minmax(0,1fr)]">
+          <div>
+            <h2 className="font-display text-4xl text-paper">Questions people ask</h2>
+            <Link href="/faq" className="mt-4 inline-block text-sm font-medium text-gold-text hover:underline">
+              See all the answers →
+            </Link>
+          </div>
+          <dl className="grid gap-x-10 gap-y-8 sm:grid-cols-2">
+            {homeFaqs.map((f) => (
+              <div key={f.question}>
+                <dt className="font-display text-xl text-paper">{f.question}</dt>
+                <dd className="mt-2 leading-relaxed text-paper-dim">{f.answer}</dd>
+              </div>
+            ))}
+          </dl>
+        </Reveal>
       </section>
 
       {/* Write to us */}

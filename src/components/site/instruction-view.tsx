@@ -18,6 +18,7 @@ export function InstructionView({ ins, day, showWeek = true, narrow = false }: {
         <h2 className="mt-1 font-display text-3xl leading-tight sm:text-4xl">{ins.theme}</h2>
         {ins.word && <p className="mt-4 max-w-2xl whitespace-pre-line leading-relaxed text-starlight-dim">{ins.word}</p>}
 
+        {day >= 1 && (
         <div className="mt-6 rounded-md border border-white/10 bg-white/5 p-4">
           <p className="text-sm font-medium text-lamp">Today, {dayNames[day - 1]}</p>
           <ul className={cn("mt-2 grid gap-2 text-sm", !narrow && "sm:grid-cols-3")}>
@@ -41,6 +42,7 @@ export function InstructionView({ ins, day, showWeek = true, narrow = false }: {
             </li>
           </ul>
         </div>
+        )}
       </section>
 
       <div className={cn("grid gap-6", narrow ? "md:grid-cols-2" : "lg:grid-cols-3")}>
