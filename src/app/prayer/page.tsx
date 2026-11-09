@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import { absolute } from "@/lib/seo";
+import { WhatsAppShare } from "@/components/site/whatsapp-share";
 import { supabase } from "@/lib/supabase";
 import { PageHero } from "@/components/site/page-hero";
 import { PrayerForm } from "@/components/site/prayer-form";
@@ -64,7 +66,15 @@ export default async function PrayerPage() {
                   <p className="text-xs text-paper-dim">
                     {p.name || "Anonymous"}, {timeAgo(p.created_at)}
                   </p>
-                  <PrayedButton id={p.id} initial={p.prayed_count ?? 0} />
+                  <span className="flex items-center gap-2">
+                    <WhatsAppShare
+                      size="sm"
+                      label="Ask others"
+                      text={`🙏 Please join me in praying for this request from the City Builders prayer wall:\n\n"${p.request.length > 280 ? `${p.request.slice(0, 277)}…` : p.request}"`}
+                      url={absolute("/prayer")}
+                    />
+                    <PrayedButton id={p.id} initial={p.prayed_count ?? 0} />
+                  </span>
                 </div>
               </li>
             ))}

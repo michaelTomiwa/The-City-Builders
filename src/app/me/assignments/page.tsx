@@ -1,22 +1,23 @@
 import Link from "next/link";
 import { getMember, getMemberData } from "@/lib/member-data";
 import { dueLabel, lagosDateTime, type Assignment, type Submission } from "@/lib/discipleship";
-import { dueState, type Ladder } from "@/lib/accountability";
+import { beforeJoining, dueState, type Ladder } from "@/lib/accountability";
 import { Countdown } from "@/components/members/countdown";
 
 const statusPill: Record<string, { text: string; className: string }> = {
   todo: { text: "To do", className: "bg-gold/20 text-gold-text" },
   late: { text: "Late: you can still hand it in", className: "bg-[#f6e1dc] text-[#8a2f1e]" },
   missed: { text: "Missed: it's not too late", className: "bg-[#f6e1dc] text-[#8a2f1e]" },
+  optional: { text: "Optional", className: "bg-[#e1e9f6] text-[#29457a]" },
   submitted: { text: "Handed in", className: "bg-[#e1e9f6] text-[#29457a]" },
   needs_work: { text: "Needs another look", className: "bg-[#f6e1dc] text-[#8a2f1e]" },
   reviewed: { text: "Reviewed", className: "bg-[#e3f1e6] text-[#24613a]" },
 };
 
-function Row({ a, s }: { a: Assignment; s?: Submission }) {
+function Row({ a, s, optional = false }: { a: Assignment; s?: Submission; optional?: boolean }) {
   const due = dueLabel(a.due_at);
   const state = dueState(a);
-  const pill = statusPill[s?.status ?? (state === "open" ? "todo" : state)];
+  const pill = statusPill[s?.status ?? (optional ? "optional" : state === "open" ? "todo" : state)];
   return (
     <li>
       <Link
@@ -26,7 +27,9 @@ function Row({ a, s }: { a: Assignment; s?: Submission }) {
         <span className="min-w-0">
           <span className="block font-display text-xl leading-snug text-paper">{a.title}</span>
           <span className="mt-1 flex flex-wrap items-center gap-2">
-            <span className={due?.late && !s ? "text-sm text-[#a3402b]" : "text-sm text-paper-dim"}>{due?.text ?? "No due date"}</span>
+            <span className={due?.late && !s && !optional ? "text-sm text-[#a3402b]" : "text-sm text-paper-dim"}>
+              {optional ? "Set before you joined" : (due?.text ?? "No due date")}
+            </span>
             {!s && a.due_at && state === "open" && <Countdown due={a.due_at} />}
             {s?.late && <span className="rounded-full bg-[#f6e1dc] px-2 py-0.5 text-xs text-[#8a2f1e]">Handed in late</span>}
           </span>
@@ -38,7 +41,7 @@ function Row({ a, s }: { a: Assignment; s?: Submission }) {
 }
 
 export default async function AssignmentsPage() {
-  const { supabase, user } = await getMember();
+  const { supabase, user, profile } = await getMember();
   const { assignments, submissions } = await getMemberData();
   const [{ data: ladderRows }, { data: planRows }] = await Promise.all([
     supabase.rpc("accountability_ladder"),
@@ -47,7 +50,8 @@ export default async function AssignmentsPage() {
   const me = ((ladderRows ?? []) as Ladder[])[0] ?? null;
   const plan = (planRows ?? [])[0] as { plan: string; due_on: string | null; created_at: string } | undefined;
   const by = new Map(submissions.map((s) => [s.assignment_id, s]));
-  const open = assignments.filter((a) => !by.has(a.id) || by.get(a.id)?.status === "needs_work");
+  const earlier = assignments.filter((a) => !by.has(a.id) && beforeJoining(a, profile?.created_at));
+  const open = assignments.filter((a) => (!by.has(a.id) && !earlier.includes(a)) || by.get(a.id)?.status === "needs_work");
   const done = assignments.filter((a) => by.has(a.id) && by.get(a.id)?.status !== "needs_work");
   const faithful = (me?.on_time_streak ?? 0) >= 5;
 
@@ -111,6 +115,19 @@ export default async function AssignmentsPage() {
                 <Row key={a.id} a={a} s={by.get(a.id)} />
               ))}
             </ul>
+          )}
+          {earlier.length > 0 && (
+            <>
+              <h2 className="mt-12 font-display text-2xl text-paper">From before you joined</h2>
+              <p className="mt-1 max-w-xl text-sm text-paper-dim">
+                These were set before you joined, so they&apos;re optional for you, with no deadline. Pick any that would help you grow.
+              </p>
+              <ul className="mt-4 space-y-3">
+                {earlier.map((a) => (
+                  <Row key={a.id} a={a} optional />
+                ))}
+              </ul>
+            </>
           )}
           {done.length > 0 && (
             <>

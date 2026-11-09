@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { absolute, jsonLd } from "@/lib/seo";
+import { WhatsAppShare } from "@/components/site/whatsapp-share";
 import { notFound } from "next/navigation";
 import { supabase, type Sermon } from "@/lib/supabase";
 
@@ -18,9 +20,12 @@ export async function generateMetadata({ params }: PageProps<"/sermons/[slug]">)
   const { slug } = await params;
   const { data } = await supabase.from("sermons").select("title, description, speaker").eq("slug", slug).maybeSingle();
   if (!data) return { title: "Message not found" };
+  const description = data.description ?? `A message from ${data.speaker} at The City Builders.`;
   return {
     title: data.title,
-    description: data.description ?? `A message from ${data.speaker} at The City Builders.`,
+    description,
+    alternates: { canonical: `/sermons/${slug}` },
+    openGraph: { title: data.title, description, type: "video.other", url: `/sermons/${slug}` },
   };
 }
 
@@ -36,8 +41,24 @@ export default async function SermonPage({ params }: PageProps<"/sermons/[slug]"
   const sermon = data as Sermon | null;
   if (!sermon) notFound();
 
+  const videoLd = sermon.youtube_video_id
+    ? {
+        "@context": "https://schema.org",
+        "@type": "VideoObject",
+        name: sermon.title,
+        description: sermon.description ?? `A message from ${sermon.speaker} at The City Builders.`,
+        thumbnailUrl: sermon.thumbnail_url ? absolute(sermon.thumbnail_url) : `https://i.ytimg.com/vi/${sermon.youtube_video_id}/hqdefault.jpg`,
+        uploadDate: sermon.streamed_at,
+        embedUrl: `https://www.youtube.com/embed/${sermon.youtube_video_id}`,
+        contentUrl: `https://www.youtube.com/watch?v=${sermon.youtube_video_id}`,
+        ...(sermon.duration_seconds ? { duration: `PT${Math.round(sermon.duration_seconds / 60)}M` } : {}),
+        publisher: { "@type": "Church", name: "The City Builders" },
+      }
+    : null;
+
   return (
     <article className="mx-auto max-w-3xl px-6 py-16">
+      {videoLd && <script type="application/ld+json" dangerouslySetInnerHTML={jsonLd(videoLd)} />}
       <Link href="/sermons" className="text-sm text-paper-dim hover:text-gold-text">
         ← All messages
       </Link>
@@ -49,6 +70,11 @@ export default async function SermonPage({ params }: PageProps<"/sermons/[slug]"
       <p className="mt-4 text-sm text-paper-dim">
         {sermon.speaker} · {formatDate(sermon.streamed_at)}
       </p>
+      <WhatsAppShare
+        className="mt-5"
+        text={`*${sermon.title}*\nWatch this message from ${sermon.speaker} at The City Builders.`}
+        url={absolute(`/sermons/${sermon.slug}`)}
+      />
 
       {sermon.description && (
         <p className="prose-sermon mt-8 text-lg leading-relaxed text-paper-dim">

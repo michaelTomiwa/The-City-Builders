@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase-server";
 import { recentDuplicate } from "@/lib/duplicates";
 import { after } from "next/server";
-import { lateReasons } from "@/lib/accountability";
+import { beforeJoining, lateReasons } from "@/lib/accountability";
 import { sendMessagePush } from "@/lib/push";
 
 async function member() {
@@ -59,11 +59,13 @@ export async function submitAssignment(formData: FormData) {
   if (filePath && !filePath.startsWith(`${user.id}/`)) throw new Error("That file isn't yours.");
 
   // A first hand-in after the due date needs a reason (the database decides what's late).
-  const [{ data: assignment }, { data: existing }] = await Promise.all([
+  const [{ data: assignment }, { data: existing }, { data: me }] = await Promise.all([
     supabase.from("assignments").select("title, due_at").eq("id", assignmentId).maybeSingle(),
     supabase.from("submissions").select("id").eq("assignment_id", assignmentId).eq("user_id", user.id).maybeSingle(),
+    supabase.from("profiles").select("created_at").eq("id", user.id).maybeSingle(),
   ]);
-  const late = !existing && assignment?.due_at && Date.parse(assignment.due_at) < Date.now();
+  const late =
+    !existing && assignment?.due_at && Date.parse(assignment.due_at) < Date.now() && !beforeJoining(assignment, me?.created_at as string | undefined);
   const reason = String(formData.get("late_reason") ?? "");
   const lateNote = String(formData.get("late_note") ?? "").trim().slice(0, 2000) || null;
   if (late && !lateReasons.some((r) => r.id === reason)) {

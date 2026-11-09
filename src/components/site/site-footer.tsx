@@ -17,7 +17,7 @@ const footerLinks = [
   { href: "/give", label: "Give" },
 ];
 
-export function SiteFooter({ logoUrl }: { logoUrl?: string | null }) {
+export function SiteFooter({ logoUrl, hide = [] }: { logoUrl?: string | null; hide?: string[] }) {
   return (
     <footer className="on-night bg-night text-starlight">
       <div className="mx-auto max-w-6xl px-6 pt-16 pb-10">
@@ -72,7 +72,7 @@ export function SiteFooter({ logoUrl }: { logoUrl?: string | null }) {
         <div className="mt-10 flex flex-col gap-4 border-t border-night-3 pt-6 text-sm text-starlight-dim sm:flex-row sm:items-center sm:justify-between">
           <p>© {new Date().getFullYear()} The City Builders</p>
           <nav className="flex flex-wrap gap-x-5 gap-y-2">
-            {footerLinks.map((link) => (
+            {footerLinks.filter((link) => !hide.includes(link.href)).map((link) => (
               <Link key={link.href} href={link.href} className="hover:text-lamp">
                 {link.label}
               </Link>

@@ -60,3 +60,19 @@ export async function currentInstruction(supabase: SupabaseClient, now = Date.no
   const { data } = await supabase.from("week_instructions").select("*").eq("week_start", thisWeek(now)).eq("status", "published").maybeSingle();
   return (data ?? null) as Instruction | null;
 }
+
+/** The whole instruction as a WhatsApp message, ready to forward to family and friends. */
+export function instructionMessage(ins: Instruction) {
+  const lines = [`*This week at The City Builders: ${ins.theme}*`];
+  if (ins.fast_days.length) lines.push("", `🍽️ *Fast:* ${fastDaysLabel(ins.fast_days)}${ins.fast_plan ? ` (${ins.fast_plan})` : ""}`);
+  if (ins.prayer_points.length) {
+    lines.push("", "🙏 *Pray:*", ...ins.prayer_points.map((p, i) => `${i + 1}. ${p}`));
+  } else if (ins.prayer_plan) {
+    lines.push("", `🙏 *Pray:* ${ins.prayer_plan}`);
+  }
+  const reads = ins.readings.map((r, i) => (r.trim() ? `${dayShort[i]} ${r.trim()}` : "")).filter(Boolean);
+  if (reads.length) lines.push("", `📖 *Read:* ${reads.join(" · ")}`);
+  if (ins.memory_verse) lines.push("", `✨ *Memory verse:* ${ins.memory_verse}`);
+  lines.push("", "Join us: Night Watch 11 PM and Morning Prayers 7 AM, Lagos time.");
+  return lines.join("\n");
+}

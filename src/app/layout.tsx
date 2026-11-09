@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { Analytics } from "@vercel/analytics/next";
 import { Gloock, Hanken_Grotesk } from "next/font/google";
 import "./globals.css";
 import { SiteHeader } from "@/components/site/site-header";
@@ -75,7 +76,11 @@ async function getNavPages() {
 
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {
-  const [navPages, settings] = await Promise.all([getNavPages(), getSiteSettings()]);
+  const [navPages, settings, { count: testimonies }] = await Promise.all([
+    getNavPages(),
+    getSiteSettings(),
+    supabase.from("testimonies").select("id", { count: "exact", head: true }).eq("status", "approved"),
+  ]);
 
   return (
     <html
@@ -97,9 +102,11 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
           </PublicOnly>
           <main className="flex-1">{children}</main>
           <PublicOnly>
-            <SiteFooter logoUrl={settings?.logo_url} />
+            {/* Sections with nothing in them yet stay out of the menus. */}
+            <SiteFooter logoUrl={settings?.logo_url} hide={testimonies ? [] : ["/testimonies"]} />
           </PublicOnly>
         </MotionProvider>
+        <Analytics />
       </body>
     </html>
   );

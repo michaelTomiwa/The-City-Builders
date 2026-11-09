@@ -64,6 +64,11 @@ export function dueState(a: { due_at: string | null; grace_hours?: number | null
   return now <= due + (a.grace_hours ?? 48) * 3_600_000 ? "late" : "missed";
 }
 
+/** Due before this person joined: optional for them, and never counted as late or missed. */
+export function beforeJoining(a: { due_at: string | null }, joinedAt: string | null | undefined) {
+  return Boolean(a.due_at && joinedAt && a.due_at < joinedAt);
+}
+
 export type Priority = {
   id: string;
   name: string;

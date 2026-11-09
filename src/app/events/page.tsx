@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { supabase, type ChurchEvent } from "@/lib/supabase";
 import { PageHero } from "@/components/site/page-hero";
 import { DailyRhythm } from "@/components/site/daily-rhythm";
+import { absolute, jsonLd } from "@/lib/seo";
+import { STREAMS_URL } from "@/lib/schedule";
 
 export const metadata: Metadata = {
   title: "Gatherings",
@@ -27,16 +29,39 @@ function formatTime(iso: string) {
   });
 }
 
+/** From yesterday, so today's gathering still shows while it's on. */
+function upcomingFrom(now = Date.now()) {
+  return new Date(now - 86_400_000).toISOString();
+}
+
 export default async function EventsPage() {
   const { data } = await supabase
     .from("events")
     .select("*")
+    .gte("starts_at", upcomingFrom())
     .order("starts_at", { ascending: true });
 
   const events = (data ?? []) as ChurchEvent[];
+  const eventsLd = events.map((e) => ({
+    "@context": "https://schema.org",
+    "@type": "Event",
+    name: e.title,
+    description: e.description ?? undefined,
+    startDate: e.starts_at,
+    endDate: e.ends_at ?? undefined,
+    eventStatus: "https://schema.org/EventScheduled",
+    eventAttendanceMode: /online|youtube|zoom/i.test(e.location ?? "") ? "https://schema.org/OnlineEventAttendanceMode" : "https://schema.org/OfflineEventAttendanceMode",
+    location: /online|youtube|zoom/i.test(e.location ?? "")
+      ? { "@type": "VirtualLocation", url: STREAMS_URL }
+      : { "@type": "Place", name: e.location ?? "Lagos", address: { "@type": "PostalAddress", addressLocality: "Lagos", addressCountry: "NG" } },
+    image: e.cover_image_url ? absolute(e.cover_image_url) : undefined,
+    organizer: { "@type": "Church", name: "The City Builders", url: absolute("/") },
+    isAccessibleForFree: true,
+  }));
 
   return (
     <>
+      {eventsLd.length > 0 && <script type="application/ld+json" dangerouslySetInnerHTML={jsonLd(eventsLd)} />}
       <PageHero
         title={<>Come build with us.</>}
         intro={<>Services, prayer watches, and programs — online and in Nigeria.</>}

@@ -3,7 +3,9 @@ import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { PageHero } from "@/components/site/page-hero";
 import { InstructionView } from "@/components/site/instruction-view";
-import { currentInstruction, lagosDayNumber } from "@/lib/instruction";
+import { currentInstruction, instructionMessage, lagosDayNumber } from "@/lib/instruction";
+import { absolute } from "@/lib/seo";
+import { WhatsAppShare } from "@/components/site/whatsapp-share";
 
 export const revalidate = 300;
 
@@ -20,7 +22,13 @@ export default async function WeekPage() {
       <PageHero title="This week, together." intro="What the whole house is fasting, praying and studying this week. Join in wherever you are." />
       <div className="mx-auto max-w-6xl px-6 py-16">
         {ins ? (
-          <InstructionView ins={ins} day={lagosDayNumber()} />
+          <>
+            <InstructionView ins={ins} day={lagosDayNumber()} />
+            <div className="mt-10 flex flex-col items-center gap-2 text-center">
+              <WhatsAppShare label="Send this week's instruction on WhatsApp" text={instructionMessage(ins)} url={absolute("/week")} />
+              <p className="text-sm text-paper-dim">Fast and pray together: send it to your family, friends and groups.</p>
+            </div>
+          </>
         ) : (
           <p className="rounded-md border border-dashed border-steel bg-white/60 px-6 py-16 text-center text-lg text-paper-dim">
             This week&apos;s instruction is on its way. Check back soon.
