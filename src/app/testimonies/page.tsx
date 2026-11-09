@@ -25,7 +25,20 @@ export default async function TestimoniesPage() {
       <PageHero title="What God is doing." intro="Stories from the City Builders: answered prayer, healing, provision and new beginnings. Read one and take courage." />
       <div className="mx-auto max-w-6xl px-6 py-16">
         {items.length === 0 ? (
-          <p className="text-lg text-paper-dim">The first testimonies are on their way.</p>
+          <div className="rounded-md border border-dashed border-steel bg-white/60 px-6 py-14 text-center">
+            <p className="font-display text-2xl text-paper">Has God done something for you?</p>
+            <p className="mx-auto mt-2 max-w-md text-paper-dim">
+              Your story could be the first one here, and it might be exactly what someone needs to read today.
+            </p>
+            <div className="mt-6 flex flex-wrap justify-center gap-3">
+              <Link href="/me/journal" className="rounded-sm bg-gold px-5 py-2.5 text-sm font-medium text-ink hover:bg-gold-soft">
+                Share your testimony
+              </Link>
+              <Link href="/contact" className="rounded-sm border border-steel bg-white px-5 py-2.5 text-sm text-paper hover:border-gold">
+                Or write to us
+              </Link>
+            </div>
+          </div>
         ) : (
           <ul className="columns-1 gap-6 md:columns-2 lg:columns-3">
             {items.map((t) => (

@@ -70,6 +70,16 @@ export default async function AdminPosts({ searchParams }: PageProps<"/admin/pos
         description="Write, schedule and feature posts. Reads, comments and amens update as people visit."
         action={{ href: "/admin/posts/new", label: "Write a post" }}
       />
+      <Link
+        href="/admin/posts/from-sermon"
+        className="mt-4 flex items-center justify-between gap-4 rounded-md border border-gold/50 bg-[#fdf7ea] px-5 py-4 transition-colors hover:border-gold"
+      >
+        <span>
+          <span className="block font-medium text-paper">▶ Turn a sermon into a post</span>
+          <span className="text-sm text-paper-dim">Pick a message from YouTube, let Claude write it up, and get a draft in minutes.</span>
+        </span>
+        <span className="shrink-0 text-sm font-medium text-gold-text">Start →</span>
+      </Link>
 
       {saved && (
         <p className="mt-6 rounded-md border border-[#bfe0c8] bg-[#eef8f0] px-4 py-3 text-sm text-[#24613a]" role="status">

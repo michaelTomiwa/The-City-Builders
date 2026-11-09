@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase-server";
 import { Panel, Pill } from "@/components/admin/ui";
 import { compact } from "@/lib/blog";
 import { weeklyReport } from "@/lib/report";
+import { GettingStarted } from "@/components/admin/getting-started";
 
 function lagos(iso: string) {
   return new Date(iso).toLocaleString("en-US", {
@@ -24,6 +25,9 @@ function greeting() {
 
 export default async function AdminDashboard() {
   const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   const now = new Date().toISOString();
 
   const [posts, comments, prayers, subscribers, events, sermons] = await Promise.all([
@@ -85,6 +89,8 @@ export default async function AdminDashboard() {
           </Link>
         ))}
       </div>
+
+      {user && <GettingStarted supabase={supabase} userId={user.id} />}
 
       <div className="mt-10 grid gap-4 lg:grid-cols-[1.4fr_1fr]">
         <Link href="/admin/report" className="on-night rounded-md bg-night p-5 text-starlight transition-colors hover:bg-night-2">

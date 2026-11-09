@@ -11,6 +11,7 @@ import {
 } from "@/lib/discipleship";
 import { currentInstruction, lagosDayNumber } from "@/lib/instruction";
 import { InstructionToday } from "@/components/site/instruction-view";
+import { AlertsNudge } from "@/components/members/alerts-nudge";
 import { StepCard } from "@/components/members/step-card";
 import { ProgressRing } from "@/components/members/progress-ring";
 import { ImHere } from "@/components/members/im-here";
@@ -211,6 +212,7 @@ export default async function TodayPage() {
         </section>
 
         <aside className="space-y-6">
+          <AlertsNudge />
           {instruction && <InstructionToday ins={instruction} day={lagosDayNumber()} />}
           {myWeek.items.length > 0 && (
             <Link href="/me/week" className="flex items-center gap-4 rounded-md border border-steel bg-white p-5 transition-colors hover:border-gold">

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { churchJsonLd, jsonLd } from "@/lib/seo";
 import { supabase, type Post, type ChurchEvent } from "@/lib/supabase";
 import { LiveStream } from "@/components/site/live-stream";
 import { RecentSessions } from "@/components/site/recent-sessions";
@@ -117,6 +118,7 @@ export default async function HomePage() {
 
   return (
     <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={jsonLd(churchJsonLd(settings?.logo_url))} />
       {/* Hero: the city at night, keeping watch */}
       <section className="on-night sky relative overflow-hidden text-starlight">
         <Stars shooting />

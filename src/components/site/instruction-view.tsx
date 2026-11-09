@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { weekLabel } from "@/lib/week";
-import { dayNames, dayShort, fastDaysLabel, passageLink, todayFrom, type Instruction } from "@/lib/instruction";
+import { dayNames, dayShort, fastDaysLabel, instructionMessage, passageLink, todayFrom, type Instruction } from "@/lib/instruction";
+import { absolute } from "@/lib/seo";
+import { WhatsAppShare } from "./whatsapp-share";
 
 /** The week's instruction: fasting, prayer and study, with today picked out. */
 export function InstructionView({ ins, day, showWeek = true, narrow = false }: { ins: Instruction; day: number; showWeek?: boolean; narrow?: boolean }) {
@@ -149,9 +151,12 @@ export function InstructionToday({ ins, day }: { ins: Instruction; day: number }
           </li>
         )}
       </ul>
-      <Link href="/week" className="mt-4 inline-block text-sm text-lamp hover:underline">
-        Read the full instruction →
-      </Link>
+      <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2">
+        <Link href="/week" className="text-sm text-lamp hover:underline">
+          Read the full instruction →
+        </Link>
+        <WhatsAppShare size="sm" label="Send to family" text={instructionMessage(ins)} url={absolute("/week")} />
+      </div>
     </section>
   );
 }

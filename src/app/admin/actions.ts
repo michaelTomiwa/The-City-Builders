@@ -6,6 +6,8 @@ import { createClient } from "@/lib/supabase-server";
 import { sendAlert } from "@/lib/push";
 import { recentDuplicate } from "@/lib/duplicates";
 import { plainText } from "@/lib/post-text";
+import { markdownToHtml } from "@/lib/post-content";
+import { parseSermonReply, videoIdFrom } from "@/lib/sermon-post";
 
 function slugify(title: string) {
   return title
@@ -415,4 +417,43 @@ export async function saveBrand(formData: FormData) {
   );
   revalidatePath("/", "layout");
   redirect("/admin/settings?saved=brand");
+}
+
+/** "Sermon to post": turns Claude's reply into a draft post with the video at the top, then opens it in the editor. */
+export async function createSermonDraft(formData: FormData) {
+  const { supabase, user } = await staff();
+  const draft = parseSermonReply(String(formData.get("reply") ?? ""));
+  if (!draft.body) throw new Error("Paste Claude's whole reply first.");
+  const videoId = videoIdFrom(text(formData, "video"));
+  const title = draft.title || text(formData, "video_title") || "A word from Pastor Michael";
+
+  const watch = videoId ? `https://www.youtube.com/watch?v=${videoId}` : null;
+  const top = watch
+    ? `<p><a href="${watch}" target="_blank" rel="noopener noreferrer"><img src="https://i.ytimg.com/vi/${videoId}/hqdefault.jpg" alt="Watch the full message on YouTube"></a></p><p><a href="${watch}" target="_blank" rel="noopener noreferrer">▶ Watch the full message on YouTube</a></p>`
+    : "";
+  const content = top + markdownToHtml(draft.body);
+
+  if (await recentDuplicate(supabase, "posts", { title })) redirect("/admin/posts");
+  const { data: post, error } = await supabase
+    .from("posts")
+    .insert({
+      title,
+      slug: await uniqueSlug(supabase, "posts", title, null),
+      excerpt: draft.summary || null,
+      content,
+      cover_image_url: videoId ? `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg` : null,
+      published: false,
+      published_at: null,
+      featured: false,
+      tags: draft.tags,
+      author_id: user.id,
+      updated_at: new Date().toISOString(),
+    })
+    .select("id")
+    .single();
+  check(error);
+  revalidatePath("/admin", "layout");
+  const params = new URLSearchParams({ from: "sermon" });
+  if (draft.check.length) params.set("check", JSON.stringify(draft.check));
+  redirect(`/admin/posts/${post!.id}/edit?${params}`);
 }

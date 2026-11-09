@@ -1,5 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { absolute, jsonLd } from "@/lib/seo";
+import { WhatsAppShare } from "@/components/site/whatsapp-share";
+import { siteUrl } from "@/lib/site";
 import { notFound } from "next/navigation";
 import { postHtml } from "@/lib/post-html";
 import { supabase, type Post, type PostComment } from "@/lib/supabase";
@@ -30,15 +33,24 @@ export async function generateMetadata({ params }: PageProps<"/blog/[slug]">): P
   const { slug } = await params;
   const post = await getPost(slug);
   if (!post) return { title: "Post not found" };
+  const description = post.excerpt ?? undefined;
   return {
     title: post.title,
-    description: post.excerpt ?? undefined,
+    description,
+    keywords: post.tags ?? undefined,
+    authors: [{ name: "Pastor Michael Tomiwa" }],
+    alternates: { canonical: `/blog/${post.slug}` },
     openGraph: {
       title: post.title,
-      description: post.excerpt ?? undefined,
+      description,
       type: "article",
+      url: `/blog/${post.slug}`,
       publishedTime: post.published_at ?? undefined,
+      modifiedTime: post.updated_at ?? undefined,
+      authors: ["Pastor Michael Tomiwa"],
+      tags: post.tags ?? undefined,
     },
+    twitter: { card: "summary_large_image", title: post.title, description },
   };
 }
 
@@ -71,8 +83,23 @@ export default async function BlogPostPage({ params }: PageProps<"/blog/[slug]">
     ...candidates.filter((p) => !(p.tags ?? []).some((t) => postTags.has(t))),
   ].slice(0, 3);
 
+  const articleLd = {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    headline: post.title,
+    description: post.excerpt ?? undefined,
+    image: absolute(post.cover_image_url || `/blog/${post.slug}/opengraph-image`),
+    datePublished: post.published_at ?? undefined,
+    dateModified: post.updated_at ?? post.published_at ?? undefined,
+    author: { "@type": "Person", name: "Pastor Michael Tomiwa" },
+    publisher: { "@id": `${siteUrl}/#church`, "@type": "Church", name: "The City Builders" },
+    mainEntityOfPage: absolute(`/blog/${post.slug}`),
+    keywords: (post.tags ?? []).join(", ") || undefined,
+  };
+
   return (
     <article>
+      <script type="application/ld+json" dangerouslySetInnerHTML={jsonLd(articleLd)} />
       <header className="on-night sky relative overflow-hidden text-starlight">
         <Stars />
         <Celestial />
@@ -98,6 +125,11 @@ export default async function BlogPostPage({ params }: PageProps<"/blog/[slug]">
             </span>
             <ViewCounter slug={post.slug} initial={post.views ?? 0} />
           </div>
+          <WhatsAppShare
+            className="hero-rise mt-6 [animation-delay:300ms]"
+            text={`*${post.title}*\nA word from Pastor Michael Tomiwa${post.excerpt ? `: ${post.excerpt}` : ""}`}
+            url={absolute(`/blog/${post.slug}`)}
+          />
         </div>
       </header>
 

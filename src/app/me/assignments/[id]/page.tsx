@@ -5,7 +5,7 @@ import { getMember, getMemberData } from "@/lib/member-data";
 import { dueLabel, lagosDateTime } from "@/lib/discipleship";
 import { SubmissionForm } from "@/components/members/submission-form";
 import { Countdown } from "@/components/members/countdown";
-import { dueState } from "@/lib/accountability";
+import { beforeJoining, dueState } from "@/lib/accountability";
 import { cn } from "@/lib/utils";
 
 const prose =
@@ -14,14 +14,15 @@ const prose =
 export default async function AssignmentPage({ params, searchParams }: PageProps<"/me/assignments/[id]">) {
   const { id } = await params;
   const query = await searchParams;
-  const { user } = await getMember();
+  const { user, profile } = await getMember();
   const { assignments, submissions, programs } = await getMemberData();
   const a = assignments.find((x) => x.id === id);
   if (!a || !user) notFound();
   const sub = submissions.find((s) => s.assignment_id === a.id) ?? null;
   const due = dueLabel(a.due_at);
   const program = programs.find((p) => p.id === a.program_id);
-  const state = dueState(a);
+  const optional = !sub && beforeJoining(a, profile?.created_at);
+  const state = optional ? "open" : dueState(a);
 
   return (
     <div>
@@ -30,8 +31,8 @@ export default async function AssignmentPage({ params, searchParams }: PageProps
       </Link>
       <div className="mt-4 grid gap-10 lg:grid-cols-[minmax(0,1fr)_24rem]">
         <article>
-          <p className={due?.late && !sub ? "text-sm text-[#a3402b]" : "text-sm text-gold-text"}>
-            {due?.text ?? "No due date"}
+          <p className={due?.late && !sub && !optional ? "text-sm text-[#a3402b]" : "text-sm text-gold-text"}>
+            {optional ? "From before you joined · optional" : (due?.text ?? "No due date")}
             {program && (
               <>
                 {" · "}
@@ -42,7 +43,12 @@ export default async function AssignmentPage({ params, searchParams }: PageProps
             )}
           </p>
           <h1 className="mt-2 font-display text-4xl leading-tight text-paper sm:text-5xl">{a.title}</h1>
-          {!sub && a.due_at && state === "open" && <Countdown due={a.due_at} className="mt-3" />}
+          {!sub && a.due_at && state === "open" && !optional && <Countdown due={a.due_at} className="mt-3" />}
+          {optional && (
+            <p className="mt-3 max-w-xl rounded-md bg-[#e1e9f6] px-4 py-3 text-sm text-[#29457a]">
+              This was set before you joined, so there&apos;s no deadline for you. Do it if it helps you grow. Handing it in still earns growth points.
+            </p>
+          )}
           {a.instructions && (
             <div className={cn("mt-8", prose)}>
               <ReactMarkdown>{a.instructions}</ReactMarkdown>
