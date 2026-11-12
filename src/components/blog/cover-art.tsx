@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils";
+import { CoverImg } from "@/components/site/cover-img";
 
 /** A post's cover image, or — when there isn't one — a lapis panel lettered with the title. */
 export function CoverArt({
@@ -15,8 +16,7 @@ export function CoverArt({
   if (src) {
     return (
       <span className={cn("block overflow-hidden bg-dusk-2", className)}>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={src} alt="" className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.04]" />
+        <CoverImg src={src} className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.04]" />
       </span>
     );
   }

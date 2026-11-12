@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { formatPostDate } from "@/lib/blog";
+import { CoverImg } from "@/components/site/cover-img";
 import type { Post } from "@/lib/supabase";
 
 type Item = Pick<Post, "id" | "title" | "slug" | "excerpt" | "cover_image_url" | "published_at">;
@@ -12,8 +13,7 @@ export function PostList({ posts }: { posts: Item[] }) {
         <li key={p.id}>
           <Link href={`/blog/${p.slug}`} className="group flex gap-5 py-6">
             {p.cover_image_url && (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={p.cover_image_url} alt="" className="hidden h-24 w-36 shrink-0 rounded-sm object-cover sm:block" loading="lazy" />
+              <CoverImg src={p.cover_image_url} className="hidden h-24 w-36 shrink-0 rounded-sm object-cover sm:block" loading="lazy" />
             )}
             <span className="min-w-0">
               {p.published_at && <span className="text-sm text-paper-dim">{formatPostDate(p.published_at)}</span>}

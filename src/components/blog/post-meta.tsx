@@ -31,6 +31,11 @@ export function PostMeta({ post, className }: { post: PostWithStats; className?:
   ];
   return (
     <ul className={cn("flex flex-wrap gap-x-4 gap-y-1 text-sm text-paper-dim", className)}>
+      {post.is_new && (
+        <li className="inline-flex items-center rounded-full bg-gold px-2 py-0.5 text-xs font-medium text-ink" aria-label="New post">
+          New
+        </li>
+      )}
       {items.map((item) => (
         <li key={item.icon} className="inline-flex items-center gap-1.5">
           <MetaIcon name={item.icon} />

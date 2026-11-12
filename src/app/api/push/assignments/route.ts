@@ -1,7 +1,8 @@
 import { runAssignmentCare } from "@/lib/push";
 
 /*
-  Pinged by Supabase pg_cron every hour (10 past): assignment reminders before
+  Pinged by Supabase pg_cron every hour (10 past): alerts for posts that just went live,
+  assignment reminders before
   the due date, and gentle follow-ups for people who miss. Each alert and each
   follow-up happens once, however often this is called.
 */

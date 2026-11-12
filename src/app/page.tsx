@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { churchJsonLd, jsonLd, upcomingServicesJsonLd, websiteJsonLd } from "@/lib/seo";
 import { churchFaqs } from "@/lib/faq";
+import { currentInstruction } from "@/lib/instruction";
+import { TodaysWord } from "@/components/site/todays-word";
 import { supabase, type Post, type ChurchEvent } from "@/lib/supabase";
 import { LiveStream } from "@/components/site/live-stream";
 import { RecentSessions } from "@/components/site/recent-sessions";
@@ -110,10 +112,11 @@ const firstWatch = [
 ];
 
 export default async function HomePage() {
-  const [{ posts, events }, settings, { data: testimonyRows }] = await Promise.all([
+  const [{ posts, events }, settings, { data: testimonyRows }, instruction] = await Promise.all([
     getHomeData(),
     getSiteSettings(),
     supabase.from("testimonies").select("id, title, body, display_name").eq("status", "approved").order("created_at", { ascending: false }).limit(3),
+    currentInstruction(supabase),
   ]);
   const faqs = churchFaqs(settings?.church_address);
   const homeFaqs = faqs.filter((f) => /time is Night Watch|join a service|Where is the church|this week's prayer points/.test(f.question));
@@ -172,6 +175,9 @@ export default async function HomePage() {
           <NightCity className="h-[clamp(9rem,24vw,22rem)] w-full" />
         </Parallax>
       </section>
+
+      {/* Today's word: the newest post and what today holds */}
+      <TodaysWord post={posts[0] ?? null} more={posts.slice(1, 3)} instruction={instruction} />
 
       {/* The watch: live stream */}
       <section id="watch" className="on-night scroll-mt-20 bg-night text-starlight">
