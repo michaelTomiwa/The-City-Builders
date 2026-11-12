@@ -2,6 +2,10 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { absolute, jsonLd } from "@/lib/seo";
 import { faqJsonLd, postFaq } from "@/lib/post-faq";
+import { postSeries } from "@/lib/series";
+import { SeriesCard } from "@/components/blog/series-card";
+import { ReadNextBar } from "@/components/blog/read-next-bar";
+import { NotifyMe } from "@/components/site/notify-me";
 import { topicSlug } from "@/lib/topics";
 import { WhatsAppShare } from "@/components/site/whatsapp-share";
 import { siteUrl } from "@/lib/site";
@@ -61,7 +65,7 @@ export default async function BlogPostPage({ params }: PageProps<"/blog/[slug]">
   const post = await getPost(slug);
   if (!post) notFound();
 
-  const [{ data: commentRows }, { data: others }] = await Promise.all([
+  const [{ data: commentRows }, { data: others }, series] = await Promise.all([
     supabase
       .from("post_comments")
       .select("*")
@@ -75,10 +79,14 @@ export default async function BlogPostPage({ params }: PageProps<"/blog/[slug]">
       .neq("id", post.id)
       .order("published_at", { ascending: false })
       .limit(12),
+    postSeries(post.content),
   ]);
+  const part = series ? series.parts.findIndex((p) => p.id === post.id) + 1 : 0;
 
   const comments = (commentRows ?? []) as PostComment[];
-  const candidates = withStats((others ?? []) as Row[]);
+  const nextInSeries = series && part > 0 ? series.parts[part] : undefined;
+  const inSeries = new Set((series?.parts ?? []).map((p) => p.id));
+  const candidates = withStats((others ?? []) as Row[]).filter((p) => !inSeries.has(p.id));
   const postTags = new Set(post.tags ?? []);
   const related: PostWithStats[] = [
     ...candidates.filter((p) => (p.tags ?? []).some((t) => postTags.has(t))),
@@ -136,6 +144,11 @@ export default async function BlogPostPage({ params }: PageProps<"/blog/[slug]">
               {readingMinutes(post.content)} min read
             </span>
             <ViewCounter slug={post.slug} initial={post.views ?? 0} />
+            {series && part > 0 && (
+              <span className="rounded-full border border-lamp/40 px-2.5 py-0.5 text-xs text-lamp">
+                Part {part} · {series.name}
+              </span>
+            )}
           </div>
           <WhatsAppShare
             className="hero-rise mt-6 [animation-delay:300ms]"
@@ -152,6 +165,8 @@ export default async function BlogPostPage({ params }: PageProps<"/blog/[slug]">
 
         <div className="post-body" dangerouslySetInnerHTML={{ __html: postHtml(post.content) }} />
 
+        {series && <SeriesCard name={series.name} parts={series.parts} currentId={post.id} />}
+
         <div className="mt-14 flex flex-col gap-6 border-y border-steel py-6 sm:flex-row sm:items-center sm:justify-between">
           <AmenButton slug={post.slug} initial={post.likes ?? 0} />
           <ShareBar title={post.title} path={`/blog/${post.slug}`} />
@@ -159,14 +174,29 @@ export default async function BlogPostPage({ params }: PageProps<"/blog/[slug]">
 
         <Comments postId={post.id} comments={comments} />
 
-        <div className="mt-16 bg-night p-6 text-starlight sm:p-8">
-          <h2 className="font-display text-2xl">Get the next post by email</h2>
-          <p className="mt-2 text-starlight-dim">New posts and the Word for the Month, straight to your inbox.</p>
-          <div className="mt-5">
-            <SubscribeForm tone="night" />
+        <div className="on-night mt-16 grid gap-8 rounded-md bg-night p-6 text-starlight sm:p-8 md:grid-cols-2">
+          <div>
+            <h2 className="font-display text-2xl">Never miss a word</h2>
+            <p className="mt-2 text-starlight-dim">Turn on alerts and your phone tells you the moment a new word is posted, and 5 minutes before Night Watch.</p>
+            <NotifyMe className="mt-5" label="Alert me to new words" />
+          </div>
+          <div className="md:border-l md:border-white/10 md:pl-8">
+            <h2 className="font-display text-2xl">Or by email</h2>
+            <p className="mt-2 text-starlight-dim">New posts and the Word for the Month, straight to your inbox.</p>
+            <div className="mt-5">
+              <SubscribeForm tone="night" />
+            </div>
           </div>
         </div>
       </div>
+
+      {(nextInSeries || related[0]) && (
+        <ReadNextBar
+          href={`/blog/${(nextInSeries ?? related[0]).slug}`}
+          title={(nextInSeries ?? related[0]).title}
+          label={nextInSeries ? `Read next · Part ${part + 1}` : "Read next"}
+        />
+      )}
 
       {related.length > 0 && (
         <section className="border-t border-steel bg-dusk/60">

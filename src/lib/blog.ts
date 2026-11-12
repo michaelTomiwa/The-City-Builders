@@ -1,14 +1,30 @@
 import type { Post } from "@/lib/supabase";
 import { plainText } from "@/lib/post-text";
 
-export type PostWithStats = Post & { comment_count: number };
+export type PostWithStats = Post & { comment_count: number; is_new?: boolean };
 
-/** Posts come back with an embedded `post_comments(count)`; flatten it. */
-export function withStats(rows: (Post & { post_comments?: { count: number }[] })[]): PostWithStats[] {
+/** Published in the last day and a half: shown with a "New" label. */
+export function isFresh(publishedAt: string | null | undefined, now = Date.now()) {
+  return Boolean(publishedAt && now - Date.parse(publishedAt) < 36 * 3600_000 && Date.parse(publishedAt) <= now);
+}
+
+/** Posts come back with an embedded `post_comments(count)`; flatten it, and mark the fresh ones. */
+export function withStats(rows: (Post & { post_comments?: { count: number }[] })[], now = Date.now()): PostWithStats[] {
   return rows.map(({ post_comments, ...post }) => ({
     ...post,
     comment_count: post_comments?.[0]?.count ?? 0,
+    is_new: isFresh(post.published_at, now),
   }));
+}
+
+/** "This morning's word" / "Tonight's word", from the Lagos time a post went out. */
+export function wordLabel(publishedAt: string | null | undefined, now = Date.now()) {
+  if (!publishedAt) return "The latest word";
+  const lagos = new Date(Date.parse(publishedAt) + 3600_000);
+  const today = new Date(now + 3600_000).toISOString().slice(0, 10);
+  if (lagos.toISOString().slice(0, 10) !== today) return "The latest word";
+  const hour = lagos.getUTCHours();
+  return hour < 12 ? "This morning's word" : hour < 17 ? "Today's word" : "Tonight's word";
 }
 
 export function readingMinutes(content: string) {

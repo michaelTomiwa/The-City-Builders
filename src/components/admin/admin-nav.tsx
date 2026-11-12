@@ -16,6 +16,7 @@ const groups = [
   {
     label: "Content",
     items: [
+      { href: "/admin/calendar", label: "Calendar" },
       { href: "/admin/posts", label: "Blog posts" },
       { href: "/admin/sermons", label: "Sermons" },
       { href: "/admin/events", label: "Events" },

@@ -180,7 +180,38 @@ export async function runAssignmentCare() {
     followUps += sent;
   }
   const week = await sendWeekReminders();
-  return { reminders, followUps, actions: list.length, week };
+  const posts = await sendNewPostAlerts().catch(() => 0);
+  return { reminders, followUps, actions: list.length, week, posts };
+}
+
+/**
+ * A phone alert to everyone with alerts on when a post goes live, whether it was
+ * scheduled (6 AM and 7 PM posts) or published straight away. Runs with the hourly
+ * job, looks back 3 hours, and each post is announced once.
+ */
+export async function sendNewPostAlerts(now = Date.now()) {
+  const { data, error } = await supabase
+    .from("posts")
+    .select("id, title, slug, excerpt, published_at")
+    .eq("published", true)
+    .lte("published_at", new Date(now).toISOString())
+    .gte("published_at", new Date(now - 3 * 3600_000).toISOString())
+    .order("published_at", { ascending: true });
+  if (error) throw new Error(error.message);
+  let sent = 0;
+  for (const p of data ?? []) {
+    const hour = new Date(Date.parse(p.published_at) + 3600_000).getUTCHours();
+    const when = hour < 12 ? "This morning's word" : hour < 17 ? "Today's word" : "Tonight's word";
+    const excerpt = (p.excerpt as string | null)?.trim();
+    const result = await sendAlert({
+      key: `post-${p.id}`,
+      title: `${when}: ${p.title}`,
+      body: excerpt ? (excerpt.length > 140 ? `${excerpt.slice(0, 137)}…` : excerpt) : "A new word from Pastor Michael Tomiwa. Tap to read.",
+      url: `/blog/${p.slug}`,
+    });
+    sent += result?.sent ?? 0;
+  }
+  return sent;
 }
 
 type WeekTarget = Target & { user_id: string; first: string; done: number; total: number };
