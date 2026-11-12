@@ -5,6 +5,7 @@ import { faqJsonLd, postFaq } from "@/lib/post-faq";
 import { postSeries } from "@/lib/series";
 import { SeriesCard } from "@/components/blog/series-card";
 import { ReadNextBar } from "@/components/blog/read-next-bar";
+import { AlertsPrompt } from "@/components/site/alerts-prompt";
 import { NotifyMe } from "@/components/site/notify-me";
 import { topicSlug } from "@/lib/topics";
 import { WhatsAppShare } from "@/components/site/whatsapp-share";
@@ -189,6 +190,8 @@ export default async function BlogPostPage({ params }: PageProps<"/blog/[slug]">
           </div>
         </div>
       </div>
+
+      <AlertsPrompt />
 
       {(nextInSeries || related[0]) && (
         <ReadNextBar

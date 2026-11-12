@@ -44,7 +44,18 @@ function saveSubscription(sub: PushSubscription) {
   });
 }
 
-export function NotifyMe({ tone = "night", className, label = "Notify me when we go live" }: { tone?: "night" | "paper"; className?: string; label?: string }) {
+export function NotifyMe({
+  tone = "night",
+  className,
+  label = "Notify me when we go live",
+  onTurnedOn,
+}: {
+  tone?: "night" | "paper";
+  className?: string;
+  label?: string;
+  /** Called once alerts are on for this device. */
+  onTurnedOn?: () => void;
+}) {
   const [state, setState] = useState<State>("loading");
   const [message, setMessage] = useState<string | null>(null);
 
@@ -97,6 +108,7 @@ export function NotifyMe({ tone = "night", className, label = "Notify me when we
       if (error) throw error;
       setState("on");
       setMessage("You're on the list. We'll alert you 5 minutes before we go live.");
+      onTurnedOn?.();
     } catch {
       setState("off");
       setMessage("Couldn't turn on alerts. Please try again.");
