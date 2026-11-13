@@ -7,6 +7,7 @@ import { currentInstruction, instructionArchive, instructionMessage, instruction
 import { weekLabel } from "@/lib/week";
 import { absolute } from "@/lib/seo";
 import { WhatsAppShare } from "@/components/site/whatsapp-share";
+import { AlertsPrompt } from "@/components/site/alerts-prompt";
 
 export const revalidate = 300;
 
@@ -31,6 +32,7 @@ export default async function WeekPage() {
         {ins ? (
           <>
             <InstructionView ins={ins} day={lagosDayNumber()} />
+            <AlertsPrompt watch="main" delayMs={30_000} />
             <div className="mt-10 flex flex-col items-center gap-2 text-center">
               <WhatsAppShare label="Send this week's instruction on WhatsApp" text={instructionMessage(ins)} url={absolute("/week")} />
               <p className="text-sm text-paper-dim">Fast and pray together: send it to your family, friends and groups.</p>
