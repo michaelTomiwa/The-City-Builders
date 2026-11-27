@@ -19,7 +19,8 @@ export function Adire({ id, className, ink = "#b9c4f0", opacity = 0.32 }: { id: 
             <circle cx="40" cy="40" r="7" fill={ink} stroke="none" />
             {Array.from({ length: 12 }, (_, i) => {
               const a = (i * Math.PI) / 6;
-              return <circle key={i} cx={40 + Math.cos(a) * 33} cy={40 + Math.sin(a) * 33} r="2.2" fill={ink} stroke="none" />;
+              // Rounded so the server and the browser draw exactly the same numbers.
+              return <circle key={i} cx={(40 + Math.cos(a) * 33).toFixed(2)} cy={(40 + Math.sin(a) * 33).toFixed(2)} r="2.2" fill={ink} stroke="none" />;
             })}
             {/* ladder */}
             <path d="M100 10 V70 M136 10 V70" />

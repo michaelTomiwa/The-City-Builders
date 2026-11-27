@@ -24,6 +24,7 @@ export type Wedding = {
   groomFull: string;
   brideFull: string;
   family: string; // "The Daramolas"
+  monogram: string; // on the seal that opens the page
   hashtag: string;
   city: string;
   verse: { text: string; ref: string };
@@ -44,8 +45,9 @@ const weddings: Record<string, Wedding> = {
     groom: "Olalekan",
     bride: "Christiana",
     groomFull: "Daramola Olalekan",
-    brideFull: "Christiana", // PLACEHOLDER: the bride's surname
+    brideFull: "Ayomide Christiana",
     family: "The Daramolas",
+    monogram: "O&C",
     hashtag: "#TheDaramolas26",
     city: "Lagos",
     verse: { text: "A threefold cord is not quickly broken.", ref: "Ecclesiastes 4:12" },
