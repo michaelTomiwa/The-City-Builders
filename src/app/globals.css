@@ -53,6 +53,8 @@
   --color-foreground: var(--foreground);
   --font-display: var(--font-gloock);
   --font-sans: var(--font-hanken);
+  --font-wed-display: var(--font-bodoni), "Bodoni Moda", Georgia, serif;
+  --font-wed-sans: var(--font-jost), "Jost", system-ui, sans-serif;
 }
 
 body {
@@ -369,3 +371,29 @@ form[data-sending] button:not([type="button"]):not([type="reset"]) {
 .rich-editor-page table .selectedCell { background: rgba(240, 180, 76, 0.18); }
 .rich-editor-page ul[data-type="taskList"] li > label { user-select: none; }
 .rich-editor-page ::selection { background: rgba(240, 180, 76, 0.35); }
+
+/* Wedding pages (/wedding/...): adire indigo, lace, champagne gold, coral bead. */
+.wedding {
+  --wed-indigo: #1e2466;
+  --wed-deep: #12164a;
+  --wed-lace: #f7f6fc;
+  --wed-mist: #b9c4f0;
+  --wed-gold: #c8a24e;
+  --wed-coral: #d8432f;
+  font-family: var(--font-wed-sans);
+  background: var(--wed-lace);
+  color: var(--wed-indigo);
+}
+.wedding ::selection { background: var(--wed-gold); color: var(--wed-deep); }
+.wedding :focus-visible { outline: 2px solid var(--wed-gold); outline-offset: 3px; }
+
+/* The one big moment: the cloth "dyes in" from the centre, then the names rise. */
+@keyframes wed-dye { from { clip-path: circle(0% at 50% 42%); opacity: 0.2; } to { clip-path: circle(150% at 50% 42%); opacity: 1; } }
+@keyframes wed-rise { from { opacity: 0; transform: translateY(0.35em); } to { opacity: 1; transform: none; } }
+@keyframes wed-bead { from { transform: scale(0); } to { transform: scale(1); } }
+.wed-dye { animation: wed-dye 2.4s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.wed-rise { animation: wed-rise 1.2s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.wed-bead { animation: wed-bead 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+@media (prefers-reduced-motion: reduce) {
+  .wed-dye, .wed-rise, .wed-bead { animation: none; }
+}

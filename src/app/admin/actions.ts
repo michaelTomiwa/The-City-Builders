@@ -476,3 +476,13 @@ export async function createSermonDraft(formData: FormData) {
   if (draft.check.length) params.set("check", JSON.stringify(draft.check));
   redirect(`/admin/posts/${post!.id}/edit?${params}`);
 }
+
+export async function moderateWish(formData: FormData) {
+  const { supabase } = await staff();
+  const id = text(formData, "id");
+  const action = text(formData, "action");
+  if (action === "delete") check((await supabase.from("wedding_wishes").delete().eq("id", id)).error);
+  else check((await supabase.from("wedding_wishes").update({ hidden: action === "hide" }).eq("id", id)).error);
+  revalidatePath("/admin/weddings");
+  revalidatePath("/wedding", "layout");
+}

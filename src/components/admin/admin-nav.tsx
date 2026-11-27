@@ -46,6 +46,7 @@ const groups = [
       { href: "/admin/comments", label: "Comments", badge: "comments" as const },
       { href: "/admin/prayers", label: "Prayer requests", badge: "prayers" as const },
       { href: "/admin/subscribers", label: "Subscribers" },
+      { href: "/admin/weddings", label: "Weddings" },
       { href: "/admin/alerts", label: "Live alerts" },
     ],
   },
