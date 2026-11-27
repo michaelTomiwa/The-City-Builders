@@ -19,6 +19,7 @@ const groups = [
       { href: "/admin/calendar", label: "Calendar" },
       { href: "/admin/posts", label: "Blog posts" },
       { href: "/admin/sermons", label: "Sermons" },
+      { href: "/admin/clips", label: "Clip studio" },
       { href: "/admin/events", label: "Events" },
       { href: "/admin/pages", label: "Pages" },
     ],
