@@ -1,4 +1,5 @@
 import { ImageResponse } from "next/og";
+import { LOGO_SVG } from "@/lib/brand";
 
 /*
   The preview card WhatsApp, Facebook, X and iMessage show when a link to
@@ -9,7 +10,6 @@ import { ImageResponse } from "next/og";
 export const ogSize = { width: 1200, height: 630 };
 export const ogContentType = "image/png";
 
-const LOGO_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="14 -2 172 128" fill="none"><g stroke="#f0b44c" stroke-width="4.5" stroke-linecap="square" stroke-linejoin="miter"><path d="M30 108 V72 A70 70 0 0 1 170 72 V108"/><path d="M30 108 V86 M170 108 V86"/><path d="M37 64 L50 82 M163 64 L150 82" stroke-width="4"/><path d="M58 36 L68 58 M142 36 L132 58" stroke-width="4"/><path d="M100 24 V48" stroke-width="4"/><path d="M86 25 L114 25 L108 50 L92 50 Z" fill="#f0b44c" stroke="none"/><path d="M58 108 V82 A42 42 0 0 1 142 82 V108"/><path d="M100 50 V72" stroke-width="3.5"/><path d="M100 72 L108 82 L100 92 L92 82 Z" fill="#f0b44c" stroke="none"/><path d="M68 108 V88 H92 V108"/><path d="M92 108 V62 H118 V108" fill="#f0b44c"/><path d="M118 108 V94 H142 V108"/><path d="M22 108 H178 V122 H22 Z"/><path d="M22 108 V122 M68 108 V122 M118 108 V122 M142 108 V122" stroke-width="3"/><path d="M23 109 H67 V121 H23 Z" fill="#f0b44c" stroke="none"/></g></svg>`;
 export const LOGO_SRC = `data:image/svg+xml;base64,${Buffer.from(LOGO_SVG).toString("base64")}`;
 
 // The skyline along the bottom: [width, height, lit-window pattern]
