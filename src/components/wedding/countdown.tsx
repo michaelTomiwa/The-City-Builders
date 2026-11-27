@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { FlipNumber } from "./motion";
 
 function parts(target: number, now: number) {
   const ms = Math.max(0, target - now);
@@ -41,7 +42,7 @@ export function Countdown({ target, doneText }: { target: string; doneText: stri
     <div className="flex items-end gap-5 sm:gap-8" role="timer" aria-label={`${p.days} days, ${p.hours} hours and ${p.minutes} minutes to go`}>
       {units.map(([n, label]) => (
         <div key={label} className="flex flex-col">
-          <span className="font-wed-display text-4xl tabular-nums leading-none text-[var(--wed-lace)] sm:text-5xl">{String(n).padStart(label.startsWith("day") ? 1 : 2, "0")}</span>
+          <FlipNumber value={String(n).padStart(label.startsWith("day") ? 1 : 2, "0")} className="font-wed-display text-4xl tabular-nums leading-none text-[var(--wed-lace)] sm:text-6xl" />
           <span className="mt-1.5 text-sm text-[var(--wed-mist)]">{label}</span>
         </div>
       ))}

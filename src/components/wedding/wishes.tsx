@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { Pop } from "./motion";
 
 export type Wish = { id: string; name: string; message: string; created_at: string };
 
@@ -54,10 +55,10 @@ export function Wishes({ wedding, initial }: { wedding: string; initial: Wish[] 
       {wishes.length ? (
         <ul className="columns-1 gap-6 sm:columns-2">
           {wishes.map((w, i) => (
-            <li key={w.id} className="mb-6 break-inside-avoid border-l-2 pl-5" style={{ borderColor: i % 3 === 0 ? "var(--wed-coral)" : i % 3 === 1 ? "var(--wed-gold)" : "var(--wed-indigo)" }}>
+            <Pop key={w.id} className="mb-6 break-inside-avoid border-l-2 pl-5" style={{ borderColor: i % 3 === 0 ? "var(--wed-coral)" : i % 3 === 1 ? "var(--wed-gold)" : "var(--wed-indigo)" }}>
               <p className="font-wed-display text-xl leading-snug text-[var(--wed-indigo)]">{w.message}</p>
               <p className="mt-2 text-[var(--wed-indigo)]/60">{w.name}</p>
-            </li>
+            </Pop>
           ))}
         </ul>
       ) : (

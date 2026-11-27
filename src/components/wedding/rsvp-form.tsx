@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { cn } from "@/lib/utils";
+import { Confetti } from "./motion";
+import { motion } from "framer-motion";
 
 type Option = { id: string; name: string };
 
@@ -15,6 +17,7 @@ export function RsvpForm({ wedding, events, couple }: { wedding: string; events:
   const [status, setStatus] = useState<"idle" | "sending" | "done" | "error">("idle");
   const [sentName, setSentName] = useState("");
   const [answer, setAnswer] = useState(true);
+  const [fire, setFire] = useState(0);
 
   async function submit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -36,19 +39,21 @@ export function RsvpForm({ wedding, events, couple }: { wedding: string; events:
     setSentName(name.split(" ")[0]);
     setAnswer(attending);
     setStatus("done");
+    if (attending) setFire((n) => n + 1);
   }
 
   if (status === "done") {
     return (
-      <div className="py-6" role="status">
-        <p className="font-wed-display text-4xl italic text-[var(--wed-gold)]">Thank you, {sentName}.</p>
+      <motion.div className="py-6" role="status" initial={{ opacity: 0, scale: 0.9, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ type: "spring", stiffness: 120, damping: 14 }}>
+        <Confetti fire={fire} />
+        <p className="font-wed-display text-4xl italic text-[var(--wed-gold)] sm:text-5xl">{answer ? `See you there, ${sentName}!` : `Thank you, ${sentName}.`}</p>
         <p className="mt-3 max-w-md text-lg leading-relaxed text-[var(--wed-lace)]">
           {answer ? `${couple} can't wait to celebrate with you. Save the dates in your calendar below.` : `We'll miss you, and we're grateful for your prayers.`}
         </p>
         <button type="button" onClick={() => setStatus("idle")} className="mt-6 text-[var(--wed-mist)] underline decoration-[var(--wed-gold)] underline-offset-4 hover:text-[var(--wed-lace)]">
           Reply for someone else
         </button>
-      </div>
+      </motion.div>
     );
   }
 
@@ -137,7 +142,7 @@ export function RsvpForm({ wedding, events, couple }: { wedding: string; events:
       <button
         type="submit"
         disabled={attending === null || status === "sending"}
-        className="inline-flex h-14 items-center bg-[var(--wed-lace)] px-10 text-lg font-medium text-[var(--wed-indigo)] transition-colors hover:bg-[var(--wed-gold)] disabled:cursor-not-allowed disabled:opacity-40"
+        className="inline-flex h-14 items-center bg-[var(--wed-lace)] px-10 text-lg font-medium text-[var(--wed-indigo)] transition-all duration-300 hover:-translate-y-1 hover:bg-[var(--wed-gold)] hover:shadow-[0_12px_40px_rgba(200,162,78,.45)] disabled:cursor-not-allowed disabled:opacity-40"
       >
         {status === "sending" ? "Sending…" : "Send my reply"}
       </button>
